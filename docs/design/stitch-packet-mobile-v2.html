@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issue #424 Escalation Packet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            surface: '#ffffff',
+            'surface-subtle': '#f9fafb',
+            'surface-card': '#ffffff',
+            'code-bg': '#f3f4f6',
+            ink: '#111827',
+            'ink-muted': '#4b5563',
+            'ink-subtle': '#6b7280',
+            border: '#e5e7eb',
+            'border-dark': '#111827',
+            
+            // Status colors strictly as requested
+            status: {
+              green: '#15803d',
+              'green-bg': '#f0fdf4',
+              'green-border': '#bbf7d0',
+              amber: '#b45309',
+              'amber-bg': '#fffbeb',
+              'amber-border': '#fde68a',
+              red: '#b91c1c',
+              'red-bg': '#fef2f2',
+              'red-border': '#fecaca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Hide scrollbar for clean horizontal nav scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    body {
+      color: #111827;
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased text-ink min-h-screen bg-surface-subtle selection:bg-gray-200">
+
+  <!-- STICKY TOP BAR (Converted from Sidebar) -->
+  <header class="sticky top-0 z-30 bg-surface border-b border-border shadow-xs">
+    <!-- Top block: Repository & Issue -->
+    <div class="px-4 py-2.5 border-b border-border/70 flex items-center justify-between text-[13px] leading-tight">
+      <span class="font-medium text-ink truncate">interviewstreet/hiring-agent</span>
+      <span class="font-semibold text-ink shrink-0 ml-2">Issue #424</span>
+    </div>
+    <!-- Horizontally scrollable row of section links -->
+    <nav class="flex items-center gap-1.5 px-4 py-2 overflow-x-auto no-scrollbar whitespace-nowrap text-[13px]">
+      <a href="#verdict" class="px-2.5 py-1 rounded bg-gray-100 font-medium text-ink hover:bg-gray-200 transition-colors">Verdict</a>
+      <a href="#whats-wrong" class="px-2.5 py-1 rounded text-ink-muted hover:text-ink hover:bg-gray-100 transition-colors">What's wrong</a>
+      <a href="#reproduce" class="px-2.5 py-1 rounded text-ink-muted hover:text-ink hover:bg-gray-100 transition-colors">Reproduce</a>
+      <a href="#root-cause" class="px-2.5 py-1 rounded text-ink-muted hover:text-ink hover:bg-gray-100 transition-colors">Root cause</a>
+      <a href="#pull-requests" class="px-2.5 py-1 rounded text-ink-muted hover:text-ink hover:bg-gray-100 transition-colors">Pull requests</a>
+      <a href="#limits" class="px-2.5 py-1 rounded text-ink-muted hover:text-ink hover:bg-gray-100 transition-colors">Limits</a>
+    </nav>
+  </header>
+
+  <!-- MAIN DOCUMENT CONTAINER (390px mobile layout, 16px side margins) -->
+  <main class="w-full max-w-[390px] mx-auto px-4 py-6 space-y-6">
+
+    <!-- DOCUMENT HEADER -->
+    <section class="space-y-2">
+      <h1 class="text-xl font-bold tracking-tight text-ink leading-snug">
+        Issue #424 · GitHub enrichment: project_type and contributor counts never reach the evaluator
+      </h1>
+      <p class="text-[13px] text-ink-muted leading-relaxed">
+        interviewstreet/hiring-agent · commit e0ece80 · investigation verified · cost $0.41
+      </p>
+    </section>
+
+    <!-- VERDICT CARD (Most prominent, bold border) -->
+    <section id="verdict" class="bg-surface rounded-lg border-2 border-border-dark p-4 shadow-sm space-y-3">
+      <div>
+        <h2 class="text-base font-bold text-ink">
+          Recommended: merge #425
+        </h2>
+        <p class="text-[14px] text-ink-muted mt-0.5 leading-snug">
+          GitHub enrichment: pass project_type and contributor counts through to the evaluator
+        </p>
+      </div>
+
+      <!-- Two green badges wrapping on mobile if needed -->
+      <div class="flex flex-wrap gap-2 pt-1">
+        <span class="inline-flex items-center px-2.5 py-1 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+          Fixes the cause · judged from diff
+        </span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+          Merges clean · git check
+        </span>
+      </div>
+
+      <!-- Count strip -->
+      <div class="pt-2 border-t border-border text-[13px] text-ink-muted">
+        27 open PRs judged · 2 fix · 2 partly · 23 don't
+      </div>
+    </section>
+
+    <!-- WHAT'S WRONG -->
+    <section id="whats-wrong" class="bg-surface rounded-lg border border-border p-4 space-y-2.5">
+      <h3 class="text-sm font-semibold text-ink">What's wrong</h3>
+      <p class="text-[13px] text-ink leading-relaxed">
+        github.py labels each repo with project_type. The project-selection step drops the label, and transform.py never prints it, so the grader is told to score by a label it never sees.
+      </p>
+      <div>
+        <a href="#whats-wrong" class="text-[13px] font-medium text-ink underline hover:text-ink-muted">Show full explanation</a>
+      </div>
+    </section>
+
+    <!-- HOW TO REPRODUCE -->
+    <section id="reproduce" class="bg-surface rounded-lg border border-border p-4 space-y-3">
+      <h3 class="text-sm font-semibold text-ink">How to reproduce</h3>
+      <ol class="space-y-3 text-[13px] text-ink leading-relaxed">
+        <li class="flex gap-2.5">
+          <span class="font-semibold text-ink-muted shrink-0">1.</span>
+          <span>Configure any LLM provider and run the pipeline on a profile with a GitHub repo that has several human contributors.</span>
+        </li>
+        <li class="flex gap-2.5">
+          <span class="font-semibold text-ink-muted shrink-0">2.</span>
+          <span>In generate_projects_json (github.py), print selected_projects after json.loads. The objects have no project_type or contributor_count keys.</span>
+        </li>
+        <li class="flex gap-2.5">
+          <span class="font-semibold text-ink-muted shrink-0">3.</span>
+          <span>Print the output of transform.convert_github_data_to_text. Each project shows only description, URL, stars, forks and language, with no Type line.</span>
+        </li>
+        <li class="flex gap-2.5">
+          <span class="font-semibold text-ink-muted shrink-0">4.</span>
+          <span>Check the evaluator's scoring evidence: it treats the projects as self_project, because criteria.jinja lines 61 and 176 key on a field it never receives.</span>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ROOT CAUSE -->
+    <section id="root-cause" class="space-y-3">
+      <div class="space-y-1">
+        <h3 class="text-sm font-semibold text-ink">Root cause</h3>
+        <p class="text-[13px] text-ink-muted leading-relaxed">
+          Each citation was checked against the code at e0ece80. The reasoning that links them is the model's and is not checked.
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Card 1 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[13px] font-medium text-ink truncate">github.py:246</span>
+            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              verified in code
+            </span>
+          </div>
+          <div class="p-2.5 bg-code-bg rounded border border-border/60">
+            <code class="font-mono text-[13px] text-ink block break-all whitespace-pre-wrap">project_type = (</code>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            The classification is computed per repo here: open_source if contributor_count &gt; 1, otherwise self_project.
+          </p>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[13px] font-medium text-ink truncate">github.py:352</span>
+            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              verified in code
+            </span>
+          </div>
+          <div class="p-2.5 bg-code-bg rounded border border-border/60">
+            <code class="font-mono text-[13px] text-ink block break-all whitespace-pre-wrap">"project_type": project.get("project_type", "self_project"),</code>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            The fields are sent to the selection LLM as input.
+          </p>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[13px] font-medium text-ink truncate">prompts/templates/github_project_selection.jinja:81</span>
+            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              verified in code
+            </span>
+          </div>
+          <div class="p-2.5 bg-code-bg rounded border border-border/60">
+            <code class="font-mono text-[13px] text-ink block break-all whitespace-pre-wrap">"author_commit_count": 0,</code>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            The required output schema has no project_type or contributor_count, so the model is not asked to return them.
+          </p>
+        </article>
+
+        <!-- Card 4 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[13px] font-medium text-ink truncate">github.py:411</span>
+            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              verified in code
+            </span>
+          </div>
+          <div class="p-2.5 bg-code-bg rounded border border-border/60">
+            <code class="font-mono text-[13px] text-ink block break-all whitespace-pre-wrap">unique_projects.append(project)</code>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            The LLM-returned object is appended as-is, with nothing re-attached.
+          </p>
+        </article>
+
+        <!-- Card 5 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[13px] font-medium text-ink truncate">transform.py:897</span>
+            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              verified in code
+            </span>
+          </div>
+          <div class="p-2.5 bg-code-bg rounded border border-border/60">
+            <code class="font-mono text-[13px] text-ink block break-all whitespace-pre-wrap">github_text += f"   URL: {project.get('github_url', 'N/A')}\n"</code>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            convert_github_data_to_text never prints project_type or the counts.
+          </p>
+        </article>
+
+        <!-- Card 6 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[13px] font-medium text-ink truncate">roles/software_engineering_intern/criteria.jinja:61</span>
+            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              verified in code
+            </span>
+          </div>
+          <div class="p-2.5 bg-code-bg rounded border border-border/60">
+            <code class="font-mono text-[13px] text-ink block break-all whitespace-pre-wrap">- When GitHub data shows all projects are 'self_project' type, open source score MUST be 10 points or less</code>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            The rubric depends on a project type that is never delivered.
+          </p>
+        </article>
+
+        <!-- Card 7 (Failed state with red badge and red left border) -->
+        <article class="bg-surface rounded-lg border border-border border-l-4 border-l-status-red p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[13px] font-medium text-ink truncate">github.py:454</span>
+            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-red-bg text-status-red border border-status-red-border">
+              failed check
+            </span>
+          </div>
+          <div class="p-2.5 bg-code-bg rounded border border-border/60">
+            <code class="font-mono text-[13px] text-ink block break-all whitespace-pre-wrap">"project_type": project.get("project_type", "self_project"),</code>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            Only the fallback paths keep these fields.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- PULL REQUESTS -->
+    <section id="pull-requests" class="space-y-3">
+      <div class="space-y-1">
+        <h3 class="text-sm font-semibold text-ink">Pull requests</h3>
+        <p class="text-[13px] text-ink-muted leading-relaxed">
+          Verdicts are judged from the diff, not run. Merge status is a real git check.
+        </p>
+      </div>
+
+      <!-- Info note -->
+      <div class="p-3 bg-surface rounded-lg border border-border text-[13px] text-ink leading-relaxed">
+        #415, #425, #242 and #462 all change the cause. Once one is merged, the others duplicate it.
+      </div>
+
+      <!-- PR Rows -->
+      <div class="space-y-3">
+        <!-- PR #425 (Recommended with dark outline) -->
+        <article class="bg-surface rounded-lg border-2 border-border-dark p-3.5 space-y-2.5 shadow-xs">
+          <div>
+            <div class="flex items-baseline gap-1.5 flex-wrap">
+              <a href="#pull-requests" class="font-semibold text-[14px] text-ink underline">#425</a>
+              <span class="font-semibold text-[14px] text-ink">GitHub enrichment: pass project_type and contributor counts through to the evaluator</span>
+            </div>
+            <div class="text-[13px] text-ink-subtle mt-0.5">by Pieismath</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              Fixes
+            </span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              Merges clean
+            </span>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            restore_repo_metadata re-attaches project_type and the counts after selection, and convert_github_data_to_text now prints a Type line.
+          </p>
+          <div class="text-[13px] text-ink-subtle">
+            Shortlisted because: mentions the issue, changes transform.py:897
+          </div>
+        </article>
+
+        <!-- PR #415 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div>
+            <div class="flex items-baseline gap-1.5 flex-wrap">
+              <a href="#pull-requests" class="font-semibold text-[14px] text-ink underline">#415</a>
+              <span class="font-semibold text-[14px] text-ink">feat: add AWS Bedrock provider transport</span>
+            </div>
+            <div class="text-[13px] text-ink-subtle mt-0.5">by sairam0424</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              Fixes
+            </span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-red-bg text-status-red border border-status-red-border">
+              Conflicts
+            </span>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            resolve_selected_projects rebuilds selected projects from the fetched data, and transform now prints the type.
+          </p>
+          <div class="text-[13px] text-ink-subtle">
+            Shortlisted because: changes github.py:411, changes transform.py:897
+          </div>
+        </article>
+
+        <!-- PR #242 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div>
+            <div class="flex items-baseline gap-1.5 flex-wrap">
+              <a href="#pull-requests" class="font-semibold text-[14px] text-ink underline">#242</a>
+              <span class="font-semibold text-[14px] text-ink">fix: validate LLM bonus claims and reject hallucinated GitHub projects</span>
+            </div>
+            <div class="text-[13px] text-ink-subtle mt-0.5">by Zem-0</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-amber-bg text-status-amber border border-status-amber-border">
+              Partly
+            </span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              Merges clean
+            </span>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            restores the fields after selection, but transform.py is untouched so the evaluator still never sees them.
+          </p>
+          <div class="text-[13px] text-ink-subtle">
+            Shortlisted because: changes github.py:411
+          </div>
+        </article>
+
+        <!-- PR #462 -->
+        <article class="bg-surface rounded-lg border border-border p-3.5 space-y-2.5">
+          <div>
+            <div class="flex items-baseline gap-1.5 flex-wrap">
+              <a href="#pull-requests" class="font-semibold text-[14px] text-ink underline">#462</a>
+              <span class="font-semibold text-[14px] text-ink">feat: add ensemble scoring to mitigate LLM non-determinism</span>
+            </div>
+            <div class="text-[13px] text-ink-subtle mt-0.5">by codesbysaravana</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-amber-bg text-status-amber border border-status-amber-border">
+              Partly
+            </span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[13px] font-medium bg-status-green-bg text-status-green border border-status-green-border">
+              Merges clean
+            </span>
+          </div>
+          <p class="text-[13px] text-ink leading-relaxed">
+            transform now prints the type, but nothing restores it on the selection path.
+          </p>
+          <div class="text-[13px] text-ink-subtle">
+            Shortlisted because: changes transform.py:897
+          </div>
+        </article>
+
+        <!-- Accordion row -->
+        <div class="bg-surface rounded-lg border border-border p-3.5 flex items-center justify-between text-[13px]">
+          <span class="font-medium text-ink">23 PRs that don't fix it</span>
+          <span class="font-medium text-ink underline">Show</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIMITS -->
+    <section id="limits" class="bg-surface rounded-lg border border-border p-4 space-y-3">
+      <h3 class="text-sm font-semibold text-ink">What this packet does not prove</h3>
+      <ul class="space-y-2.5 text-[13px] text-ink leading-relaxed list-disc pl-4">
+        <li>Citations are checked against the code. The explanation that links them, and any claim about outside systems, is the model's reasoning and is not checked.</li>
+        <li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+        <li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers drifted, is missed.</li>
+      </ul>
+    </section>
+
+  </main>
+
+</body>
+</html>

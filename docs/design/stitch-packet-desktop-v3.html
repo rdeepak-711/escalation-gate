@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Issue #424 · Technical Incident Dossier</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+<body class="bg-[#f8fafc] text-slate-900 antialiased font-['Inter',sans-serif] min-h-screen">
+<div class="flex min-h-screen">
+<!-- 1. SIDEBAR -->
+<aside class="w-[260px] flex-shrink-0 border-r border-slate-200 bg-white p-6 sticky top-0 h-screen overflow-y-auto z-20 hidden md:block">
+<div class="mb-8">
+<div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">interviewstreet/hiring-agent</div>
+<div class="text-lg font-bold text-slate-900 mt-1">Issue #424</div>
+</div>
+<nav class="space-y-1.5 text-sm font-medium">
+<a class="block px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors" href="#verdict">Verdict</a>
+<a class="block px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors" href="#overview">Overview</a>
+<a class="block px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors" href="#how-it-breaks">How it breaks</a>
+<a class="block px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors" href="#reproduce">Reproduce</a>
+<a class="block px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors" href="#evidence">Evidence</a>
+<a class="block px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors" href="#pull-requests">Pull requests</a>
+<a class="block px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors" href="#limits">Limits</a>
+</nav>
+</aside>
+<!-- 2. MAIN CONTENT -->
+<main class="flex-1 max-w-6xl mx-auto p-6 md:p-10 space-y-10">
+<!-- HEADER -->
+<header class="border-b border-slate-200 pb-6">
+<h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 mb-3">
+        Issue #424: GitHub enrichment: project_type and contributor counts never reach the evaluator
+      </h1>
+<div class="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+<span>interviewstreet/hiring-agent</span>
+<span class="text-slate-400">·</span>
+<span>commit <code class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-800">e0ece80</code></span>
+<span class="text-slate-400">·</span>
+<span class="inline-flex items-center gap-1.5">investigation <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span></span>
+<span class="text-slate-400">·</span>
+<span>cost $0.41</span>
+</div>
+</header>
+<!-- VERDICT CARD -->
+<section class="scroll-mt-6" id="verdict">
+<div class="p-6 rounded-lg bg-white border-2 border-slate-900 shadow-sm">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+<div>
+<div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Recommended Action</div>
+<h2 class="text-xl font-bold text-slate-900">
+              Recommended: merge #425
+            </h2>
+<p class="text-sm text-slate-600 mt-1 max-w-2xl">
+              GitHub enrichment: pass project_type and contributor counts through to the evaluator
+            </p>
+</div>
+<div class="flex flex-wrap sm:flex-col items-start md:items-end gap-2 shrink-0">
+<span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+              Fixes the cause · judged from diff
+            </span>
+<span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+              Merges clean · git check
+            </span>
+</div>
+</div>
+</div>
+</section>
+<!-- STAT TILES -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-4" id="overview">
+<div class="p-5 rounded-lg bg-white border border-slate-200 shadow-sm">
+<div class="text-3xl font-bold text-slate-900">7/7</div>
+<div class="text-xs font-medium text-slate-500 mt-1">citations verified in code</div>
+</div>
+<div class="p-5 rounded-lg bg-white border border-slate-200 shadow-sm">
+<div class="text-3xl font-bold text-slate-900">192 → 27</div>
+<div class="text-xs font-medium text-slate-500 mt-1">open PRs shortlisted by cited lines</div>
+</div>
+<div class="p-5 rounded-lg bg-white border border-slate-200 shadow-sm">
+<div class="text-3xl font-bold text-slate-900">2 fix</div>
+<div class="text-xs font-medium text-slate-500 mt-1">1 merges clean</div>
+</div>
+<div class="p-5 rounded-lg bg-white border border-slate-200 shadow-sm">
+<div class="text-3xl font-bold text-slate-900">$0.41</div>
+<div class="text-xs font-medium text-slate-500 mt-1">total cost</div>
+</div>
+</section>
+<!-- HOW IT BREAKS (Flowchart diagram) -->
+<section class="scroll-mt-6" id="how-it-breaks">
+<div class="mb-4">
+<h2 class="text-lg font-bold text-slate-900">How it breaks</h2>
+<p class="text-sm text-slate-500 mt-0.5">
+          The path is the model's reasoning. Each box is a citation checked against the code.
+        </p>
+</div>
+<!-- Flowchart 6 boxes: 2 rows of 3 -->
+<div class="space-y-4">
+<!-- Row 1 (Boxes 1 -> 2 -> 3) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+<!-- Box 1 -->
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm relative flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-2 mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-semibold text-slate-600">github.py:246</span>
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">✓ verified</span>
+</div>
+<div class="text-sm font-bold text-slate-900">Label computed per repo</div>
+</div>
+<div class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-slate-100 border border-slate-300 items-center justify-center text-slate-500 text-xs">→</div>
+</div>
+<!-- Box 2 -->
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm relative flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-2 mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-semibold text-slate-600">github.py:352</span>
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">✓ verified</span>
+</div>
+<div class="text-sm font-bold text-slate-900">Sent to selection model</div>
+</div>
+<div class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-slate-100 border border-slate-300 items-center justify-center text-slate-500 text-xs">→</div>
+</div>
+<!-- Box 3 -->
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm relative flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-2 mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-semibold text-slate-600 truncate" title="github_project_selection.jinja:81">github_project_selection.jinja:81</span>
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">✓ verified</span>
+</div>
+<div class="text-sm font-bold text-slate-900">Output schema drops it</div>
+</div>
+</div>
+</div>
+<!-- Connection banner for mobile & desktop wrapping -->
+<div class="flex justify-end pr-8 md:pr-16 text-slate-400 text-xs items-center gap-1">
+<span class="h-4 border-r-2 border-dashed border-slate-300"></span>
+<span>↓ pipeline continues to formatting &amp; grading</span>
+</div>
+<!-- Row 2 (Boxes 4 -> 5 -> 6) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+<!-- Box 4 -->
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm relative flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-2 mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-semibold text-slate-600">github.py:411</span>
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">✓ verified</span>
+</div>
+<div class="text-sm font-bold text-slate-900">Model's copy kept as-is</div>
+</div>
+<div class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-slate-100 border border-slate-300 items-center justify-center text-slate-500 text-xs">→</div>
+</div>
+<!-- Box 5 -->
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm relative flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-2 mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-semibold text-slate-600">transform.py:897</span>
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">✓ verified</span>
+</div>
+<div class="text-sm font-bold text-slate-900">Never printed for grader</div>
+</div>
+<div class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-slate-100 border border-slate-300 items-center justify-center text-slate-500 text-xs">→</div>
+</div>
+<!-- Box 6 (Red warning border) -->
+<div class="p-4 rounded-lg bg-white border-2 border-rose-500 shadow-sm relative flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between gap-2 mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-semibold text-slate-600">criteria.jinja:61</span>
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold rounded bg-rose-50 text-rose-700 border border-rose-200">failure site</span>
+</div>
+<div class="text-sm font-bold text-rose-950">Rubric scores by missing label</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- TWO COLUMNS (What's wrong & How to reproduce) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-6" id="reproduce">
+<!-- Left Card: What's wrong -->
+<div class="p-6 rounded-lg bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+<div>
+<h2 class="text-base font-bold text-slate-900 mb-3">What's wrong</h2>
+<p class="text-sm text-slate-700 leading-relaxed">
+            github.py labels each repo with project_type. The project-selection step drops the label, and transform.py never prints it, so the grader is told to score by a label it never sees.
+          </p>
+</div>
+<div class="mt-6 pt-4 border-t border-slate-100">
+<a class="text-sm font-medium text-slate-600 hover:text-slate-900 underline" href="#evidence">Show full explanation</a>
+</div>
+</div>
+<!-- Right Card: How to reproduce -->
+<div class="p-6 rounded-lg bg-white border border-slate-200 shadow-sm">
+<h2 class="text-base font-bold text-slate-900 mb-3">How to reproduce</h2>
+<ol class="space-y-3 text-sm text-slate-700">
+<li class="flex items-start gap-2.5">
+<span class="font-semibold text-slate-400 shrink-0">1.</span>
+<span>Run the pipeline on a profile with a GitHub repo that has several contributors.</span>
+</li>
+<li class="flex items-start gap-2.5">
+<span class="font-semibold text-slate-400 shrink-0">2.</span>
+<span>Print selected_projects in generate_projects_json: no project_type key.</span>
+</li>
+<li class="flex items-start gap-2.5">
+<span class="font-semibold text-slate-400 shrink-0">3.</span>
+<span>Print convert_github_data_to_text output: no Type line.</span>
+</li>
+<li class="flex items-start gap-2.5">
+<span class="font-semibold text-slate-400 shrink-0">4.</span>
+<span>Check the scoring evidence: projects treated as self_project.</span>
+</li>
+</ol>
+</div>
+</section>
+<!-- EVIDENCE GROUPED BY FILE -->
+<section class="scroll-mt-6" id="evidence">
+<div class="mb-4">
+<h2 class="text-lg font-bold text-slate-900">Evidence</h2>
+<p class="text-sm text-slate-500">Each citation was checked against the code at e0ece80.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Container 1: github.py -->
+<div class="rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+<div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-sm font-bold text-slate-900">github.py</span>
+<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">4 citations</span>
+</div>
+<div class="p-5 space-y-4 flex-1">
+<!-- citation 1 -->
+<div class="space-y-1.5 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+<div class="flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-500">line 246</span>
+<span class="inline-flex items-center px-1.5 py-0.2 text-[11px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span>
+</div>
+<div class="bg-slate-50 border border-slate-200 rounded p-2 font-['JetBrains_Mono',monospace] text-xs text-slate-800 overflow-x-auto">
+<code>project_type = (</code>
+</div>
+<div class="text-xs text-slate-600">classification computed per repo</div>
+</div>
+<!-- citation 2 -->
+<div class="space-y-1.5 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+<div class="flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-500">line 352</span>
+<span class="inline-flex items-center px-1.5 py-0.2 text-[11px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span>
+</div>
+<div class="bg-slate-50 border border-slate-200 rounded p-2 font-['JetBrains_Mono',monospace] text-xs text-slate-800 overflow-x-auto">
+<code>"project_type": project.get("project_type", "self_project"),</code>
+</div>
+<div class="text-xs text-slate-600">sent to the selection LLM</div>
+</div>
+<!-- citation 3 -->
+<div class="space-y-1.5 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+<div class="flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-500">line 411</span>
+<span class="inline-flex items-center px-1.5 py-0.2 text-[11px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span>
+</div>
+<div class="bg-slate-50 border border-slate-200 rounded p-2 font-['JetBrains_Mono',monospace] text-xs text-slate-800 overflow-x-auto">
+<code>unique_projects.append(project)</code>
+</div>
+<div class="text-xs text-slate-600">model's object appended as-is</div>
+</div>
+<!-- citation 4 -->
+<div class="space-y-1.5">
+<div class="flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-500">line 454</span>
+<span class="inline-flex items-center px-1.5 py-0.2 text-[11px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span>
+</div>
+<div class="text-xs text-slate-600 mt-1">fallback path keeps the fields</div>
+</div>
+</div>
+</div>
+<!-- Container 2: transform.py -->
+<div class="rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+<div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-sm font-bold text-slate-900">transform.py</span>
+<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">1 citation</span>
+</div>
+<div class="p-5 flex-1 space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-500">line 897</span>
+<span class="inline-flex items-center px-1.5 py-0.2 text-[11px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span>
+</div>
+<div class="bg-slate-50 border border-slate-200 rounded p-2 font-['JetBrains_Mono',monospace] text-xs text-slate-800 overflow-x-auto">
+<code>github_text += f"   URL: {project.get('github_url', 'N/A')}\n"</code>
+</div>
+<div class="text-xs text-slate-600">never prints project_type</div>
+</div>
+</div>
+<!-- Container 3: prompts/templates/github_project_selection.jinja -->
+<div class="rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+<div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-sm font-bold text-slate-900 truncate" title="prompts/templates/github_project_selection.jinja">prompts/templates/github_project_selection.jinja</span>
+<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 shrink-0">1 citation</span>
+</div>
+<div class="p-5 flex-1 space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-500">line 81</span>
+<span class="inline-flex items-center px-1.5 py-0.2 text-[11px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span>
+</div>
+<div class="bg-slate-50 border border-slate-200 rounded p-2 font-['JetBrains_Mono',monospace] text-xs text-slate-800 overflow-x-auto">
+<code>"author_commit_count": 0,</code>
+</div>
+<div class="text-xs text-slate-600">output schema has no project_type</div>
+</div>
+</div>
+<!-- Container 4: roles/software_engineering_intern/criteria.jinja -->
+<div class="rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+<div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-sm font-bold text-slate-900 truncate" title="roles/software_engineering_intern/criteria.jinja">roles/software_engineering_intern/criteria.jinja</span>
+<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 shrink-0">1 citation</span>
+</div>
+<div class="p-5 flex-1 space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-['JetBrains_Mono',monospace] text-xs font-medium text-slate-500">line 61</span>
+<span class="inline-flex items-center px-1.5 py-0.2 text-[11px] font-medium rounded bg-emerald-50 text-emerald-700 border border-emerald-200">verified</span>
+</div>
+<div class="bg-slate-50 border border-slate-200 rounded p-2 font-['JetBrains_Mono',monospace] text-xs text-slate-800 overflow-x-auto">
+<code>- When GitHub data shows all projects are 'self_project' type, open source score MUST be 10 points or less</code>
+</div>
+<div class="text-xs text-slate-600">rubric depends on the label</div>
+</div>
+</div>
+</div>
+</section>
+<!-- PULL REQUESTS -->
+<section class="scroll-mt-6 space-y-6" id="pull-requests">
+<div>
+<h2 class="text-lg font-bold text-slate-900">Pull requests</h2>
+<p class="text-sm text-slate-500 mt-0.5">
+          Verdicts are judged from the diff, not run. Merge status is a real git check.
+        </p>
+</div>
+<!-- 1. FUNNEL DIAGRAM -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-between">
+<span class="text-sm font-semibold text-slate-900">192 open PRs</span>
+<span class="text-slate-400 text-xs font-bold">→</span>
+</div>
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-between">
+<span class="text-sm font-semibold text-slate-900">27 change a cited line or mention #424</span>
+<span class="text-slate-400 text-xs font-bold">→</span>
+</div>
+<div class="p-4 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-between">
+<span class="text-sm font-semibold text-slate-900">4 change the cause</span>
+<span class="text-slate-400 text-xs font-bold">→</span>
+</div>
+<div class="p-4 rounded-lg bg-emerald-50 border border-emerald-300 shadow-sm flex items-center justify-between">
+<span class="text-sm font-bold text-emerald-900">1 fixes and merges clean</span>
+<span class="text-emerald-600 text-xs font-bold">✓</span>
+</div>
+</div>
+<!-- 2. 2x2 BOARD MATRIX -->
+<div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+<div class="grid grid-cols-1 md:grid-cols-[100px_1fr_1fr] border-b border-slate-200 bg-slate-50 text-xs font-bold text-slate-600 uppercase tracking-wider">
+<div class="hidden md:block p-3"></div>
+<div class="p-3 text-center border-t md:border-t-0 md:border-l border-slate-200">Merges clean</div>
+<div class="p-3 text-center border-t md:border-t-0 md:border-l border-slate-200">Conflicts</div>
+</div>
+<!-- Row 1: Fixes -->
+<div class="grid grid-cols-1 md:grid-cols-[100px_1fr_1fr] border-b border-slate-200">
+<div class="p-4 bg-slate-50 text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center md:justify-center border-b md:border-b-0">
+            Fixes
+          </div>
+<!-- Fixes + Merges clean -->
+<div class="p-4 md:border-l border-slate-200 bg-slate-50/40">
+<div class="border-2 border-slate-900 rounded-lg p-4 bg-white shadow-sm space-y-2">
+<div class="flex items-center justify-between gap-2">
+<span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  recommended
+                </span>
+<span class="text-xs text-slate-500 font-medium">by Pieismath</span>
+</div>
+<div class="font-medium text-sm text-slate-900">
+                #425 GitHub enrichment: pass project_type and contributor counts through to the evaluator
+              </div>
+</div>
+</div>
+<!-- Fixes + Conflicts -->
+<div class="p-4 border-t md:border-t-0 md:border-l border-slate-200">
+<div class="border border-slate-200 rounded-lg p-4 bg-white shadow-sm space-y-2">
+<div class="flex items-center justify-between gap-2">
+<span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-rose-50 text-rose-700 border border-rose-200">
+                  Conflicts
+                </span>
+<span class="text-xs text-slate-500 font-medium">by sairam0424</span>
+</div>
+<div class="font-medium text-sm text-slate-900">
+                #415 feat: add AWS Bedrock provider transport
+              </div>
+</div>
+</div>
+</div>
+<!-- Row 2: Partly -->
+<div class="grid grid-cols-1 md:grid-cols-[100px_1fr_1fr]">
+<div class="p-4 bg-slate-50 text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center md:justify-center border-b md:border-b-0">
+            Partly
+          </div>
+<!-- Partly + Merges clean -->
+<div class="p-4 md:border-l border-slate-200 space-y-3">
+<div class="border border-slate-200 rounded-lg p-3 bg-white shadow-sm space-y-1">
+<div class="flex items-center justify-between gap-2">
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium rounded bg-amber-50 text-amber-800 border border-amber-200">Partly</span>
+<span class="text-xs text-slate-500">by Zem-0</span>
+</div>
+<div class="font-medium text-xs sm:text-sm text-slate-900">
+                #242 fix: validate LLM bonus claims and reject hallucinated GitHub projects
+              </div>
+</div>
+<div class="border border-slate-200 rounded-lg p-3 bg-white shadow-sm space-y-1">
+<div class="flex items-center justify-between gap-2">
+<span class="inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium rounded bg-amber-50 text-amber-800 border border-amber-200">Partly</span>
+<span class="text-xs text-slate-500">by codesbysaravana</span>
+</div>
+<div class="font-medium text-xs sm:text-sm text-slate-900">
+                #462 feat: add ensemble scoring to mitigate LLM non-determinism
+              </div>
+</div>
+</div>
+<!-- Partly + Conflicts -->
+<div class="p-4 border-t md:border-t-0 md:border-l border-slate-200 flex items-center justify-center text-slate-400 bg-slate-50/50">
+<span class="text-lg">—</span>
+</div>
+</div>
+</div>
+<!-- 3. Accordion Row -->
+<div class="border border-slate-200 rounded-lg p-3.5 bg-white flex items-center justify-between text-sm shadow-sm">
+<span class="text-slate-700 font-medium">23 PRs that don't fix it</span>
+<button class="text-slate-600 hover:text-slate-900 font-semibold text-xs px-2.5 py-1 rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors" type="button">Show</button>
+</div>
+</section>
+<!-- LIMITS -->
+<section class="scroll-mt-6" id="limits">
+<div class="border border-slate-200 rounded-lg p-6 bg-white space-y-3 shadow-sm">
+<h3 class="text-sm font-bold text-slate-900">What this packet does not prove</h3>
+<ul class="space-y-2 text-sm text-slate-600 list-disc pl-5">
+<li>Citations are checked against the code. The explanation and the order of the chain are the model's reasoning and are not checked.</li>
+<li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+<li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers drifted, is missed.</li>
+</ul>
+</div>
+</section>
+</main>
+</div>
+</body></html>

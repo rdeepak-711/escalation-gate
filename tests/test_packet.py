@@ -89,3 +89,57 @@ def test_merge_status_clean_and_conflicts(tmp_path):
     assert pk.merge_status(tmp_path, "clean") == "clean"
     assert pk.merge_status(tmp_path, "clash") == "conflicts"
     assert pk.merge_status(tmp_path, "no-such-ref") == "unknown"
+
+
+def test_long_cause_is_split_into_a_short_lead_and_the_rest():
+    cause = "First sentence here. Second one. Third one is extra. Fourth too."
+    assert pk.split_cause(cause, limit=40) == ("First sentence here. Second one.", "Third one is extra. Fourth too.")
+
+
+def test_short_cause_is_not_split():
+    assert pk.split_cause("Only one sentence.") == ("Only one sentence.", "")
+
+
+def test_html_marks_a_needs_human_run_and_a_failed_citation():
+    d = data([])
+    d["status"] = "needs_human"
+    html = pk.render_html(d)
+    assert 'class="pill amber">needs_human' in html
+    assert "failed check" in html and "verified in code" in html
+
+
+def test_evidence_is_grouped_by_file_keeping_numbers():
+    d = data([])
+    d["report"]["evidence"] = [dict(EVIDENCE[0]), {**EVIDENCE[0], "file": "transform.py", "line": 9},
+                               {**EVIDENCE[0], "line": 204}]
+    groups = pk.context(d)["files"]
+    assert [(g["file"], [e["n"] for e in g["items"]]) for g in groups] == [("github.py", [1, 3]), ("transform.py", [2])]
+
+
+def test_board_puts_each_pr_in_its_verdict_and_merge_cell():
+    board = pk.context(data([v(425, "fixes"), v(415, "fixes", "conflicts"), v(242, "partly"), v(11, "no")]))["board"]
+    assert [x["pr"] for x in board["fixes"]["clean"]] == [425]
+    assert [x["pr"] for x in board["fixes"]["conflicts"]] == [415]
+    assert [x["pr"] for x in board["partly"]["clean"]] == [242]
+    assert board["partly"]["conflicts"] == []
+
+
+def test_chain_steps_carry_their_citation():
+    d = data([])
+    d["report"]["chain"] = [{"step": "owner is wrong", "evidence": 1}, {"step": "made up", "evidence": 2}]
+    chain = pk.context(d)["chain"]
+    assert chain[0] == {"step": "owner is wrong", "n": 1, "loc": "github.py:239", "short": "github.py:239", "checked": True}
+    assert chain[1]["checked"] is False
+
+
+def test_funnel_counts():
+    d = data([v(425, "fixes"), v(242, "partly"), v(11, "no")])
+    d["open_prs"] = 192
+    html = pk.render_html(d)
+    assert "192" in html and "How it breaks" not in html  # no chain in this report, so no flowchart
+
+
+def test_flowchart_appears_when_there_is_a_chain():
+    d = data([])
+    d["report"]["chain"] = [{"step": "owner is wrong", "evidence": 1}]
+    assert "How it breaks" in pk.render_html(d)

@@ -1,5 +1,6 @@
 """Step 06: turn one investigation and its PR verdicts into a packet (Markdown + HTML) an engineer can act on."""
 import argparse
+import re
 import subprocess
 import sys
 from datetime import date
@@ -30,6 +31,22 @@ def joined(prs: list[int]) -> str:
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
+def split_cause(cause: str, limit: int = 320) -> tuple[str, str]:
+    """A short lead (whole sentences, about `limit` characters) and the rest, for a 'show more' fold."""
+    sentences = re.split(r"(?<=[.!?])\s+", cause.strip())
+    lead = []
+    for sentence in sentences:
+        if lead and len(" ".join(lead + [sentence])) > limit:
+            break
+        lead.append(sentence)
+    return " ".join(lead), " ".join(sentences[len(lead):])
+
+
+def label(title: str) -> str:
+    """Short name for the sidebar: 'Issue #424' or 'Reported symptom'."""
+    return title.split(":")[0] if title.startswith("Issue #") else "Reported symptom"
+
+
 def cell(text) -> str:
     """Make text safe inside a Markdown table cell."""
     return str(text).replace("|", "\\|").replace("\n", " ")
@@ -43,9 +60,47 @@ def environment(autoescape: bool) -> Environment:
     return env
 
 
+def group_by_file(evidence: list[dict]) -> list[dict]:
+    """Citations grouped per file, in first-seen order, each keeping its evidence number."""
+    groups: dict[str, list[dict]] = {}
+    for n, item in enumerate(evidence, start=1):
+        groups.setdefault(item["file"], []).append({**item, "n": n})
+    return [{"file": f, "items": items} for f, items in groups.items()]
+
+
+def board(verdicts: list[dict]) -> dict:
+    """fixes/partly × clean/conflicts; unknown or unchecked merges go with conflicts (not proven clean)."""
+    cells = {v: {"clean": [], "conflicts": []} for v in ("fixes", "partly")}
+    for v in verdicts:
+        if v["verdict"] in cells:
+            cells[v["verdict"]]["clean" if v["merge"] == "clean" else "conflicts"].append(v)
+    return cells
+
+
+def chain(report: dict) -> list[dict]:
+    """The model's cause chain, each step joined to the citation that backs it."""
+    evidence = report["evidence"]
+    steps = []
+    for step in report.get("chain", []):
+        n = step["evidence"]
+        item = evidence[n - 1] if 1 <= n <= len(evidence) else None
+        steps.append({"step": step["step"], "n": n,
+                      "loc": f"{item['file']}:{item['line']}" if item else "missing citation",
+                      "short": f"{item['file'].rsplit('/', 1)[-1]}:{item['line']}" if item else "missing citation",
+                      "checked": bool(item and item.get("checked"))})
+    return steps
+
+
 def context(data: dict) -> dict:
     verdicts = order(data["verdicts"])
+    lead, rest = split_cause(data["report"]["cause"])
     return {**data, "verdicts": verdicts, "recommended": recommend(verdicts),
+            "cause_lead": lead, "cause_rest": rest, "label": label(data["title"]),
+            "judged": [v for v in verdicts if v["verdict"] != "no"],
+            "rejected": [v for v in verdicts if v["verdict"] == "no"],
+            "files": group_by_file(data["report"]["evidence"]), "board": board(verdicts),
+            "chain": chain(data["report"]), "open_prs": data.get("open_prs"),
+            "verified": sum(bool(e.get("checked")) for e in data["report"]["evidence"]),
             "competing": [v["pr"] for v in verdicts if v["verdict"] != "no"],
             "counts": {k: sum(v["verdict"] == k for v in verdicts) for k in ORDER}}
 
@@ -110,10 +165,27 @@ def load(conn, inv_id: int, repo_dir: Path) -> dict:
         else:
             v["merge"] = merge_status(repo_dir, f"refs/gate/pr/{v['pr']}") if fetched else "unknown"
 
+    open_prs = conn.execute("SELECT count(*) FROM prs WHERE repo = %s", (repo,)).fetchone()[0]
     commit = subprocess.run(["git", "-C", str(repo_dir), "rev-parse", "--short", "HEAD"],
                             capture_output=True, text=True).stdout.strip()
     return {"id": inv_id, "repo": repo, "commit": commit, "title": title, "status": status,
-            "cost": sum(costs), "created": created.date().isoformat(), "report": report, "verdicts": verdicts}
+            "cost": sum(costs), "created": created.date().isoformat(), "report": report, "verdicts": verdicts,
+            "open_prs": open_prs}
+
+
+def write(conn, inv_id: int) -> Path:
+    """Write out/packet-<id>.md and .html; return the HTML path."""
+    repo = conn.execute("SELECT repo FROM investigations WHERE id = %s", (inv_id,)).fetchone()
+    if repo is None:
+        sys.exit(f"no investigation {inv_id}")
+    data = load(conn, inv_id, ROOT / "vendor" / repo[0].split("/")[1])
+    data["generated"] = date.today().isoformat()
+    md_path = OUT_DIR / f"packet-{inv_id}.md"
+    html_path = OUT_DIR / f"packet-{inv_id}.html"
+    md_path.write_text(render_markdown(data))
+    html_path.write_text(render_html(data))
+    print(f"wrote {md_path}\nwrote {html_path}")
+    return html_path
 
 
 def main() -> int:
@@ -122,19 +194,8 @@ def main() -> int:
     args = parser.parse_args()
 
     conn = connect()
-    repo = conn.execute("SELECT repo FROM investigations WHERE id = %s", (args.investigation,)).fetchone()
-    if repo is None:
-        sys.exit(f"no investigation {args.investigation}")
-    repo_dir = ROOT / "vendor" / repo[0].split("/")[1]
-    data = load(conn, args.investigation, repo_dir)
+    write(conn, args.investigation)
     conn.close()
-
-    data["generated"] = date.today().isoformat()
-    md_path = OUT_DIR / f"packet-{args.investigation}.md"
-    html_path = OUT_DIR / f"packet-{args.investigation}.html"
-    md_path.write_text(render_markdown(data))
-    html_path.write_text(render_html(data))
-    print(f"wrote {md_path}\nwrote {html_path}")
     return 0
 
 

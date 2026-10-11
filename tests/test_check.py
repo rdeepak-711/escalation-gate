@@ -90,3 +90,20 @@ def test_only_the_bad_item_is_reported(repo):
 def test_real_probe_output_passes():
     report = json.loads(PROBE.read_text())["structured_output"]
     assert check(report, VENDOR) == []
+
+# --- the cause chain: each step must point at an evidence item that exists ---
+
+def test_chain_pointing_at_real_evidence_passes(repo):
+    r = report(item(), item(line=20, quote="return github_text"))
+    r["chain"] = [{"step": "text is built", "evidence": 1}, {"step": "text is returned", "evidence": 2}]
+    assert check(r, repo) == []
+
+
+def test_chain_pointing_at_missing_evidence_fails(repo):
+    r = report(item())
+    r["chain"] = [{"step": "text is built", "evidence": 1}, {"step": "made up", "evidence": 3}]
+    assert check(r, repo) == ["chain step 2: points at evidence 3, but there are only 1 evidence items"]
+
+
+def test_report_without_a_chain_still_passes(repo):
+    assert check(report(item()), repo) == []

@@ -3,87 +3,365 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Escalation packet {{ id }}</title>
+<title>{{ label }} · escalation packet · {{ repo }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-  :root { --bg:#fbfaf7; --card:#fff; --ink:#1d1d1b; --muted:#6b6b66; --line:#e6e3dc;
-          --ok:#1f7a4d; --ok-bg:#e7f4ec; --bad:#b3261e; --bad-bg:#fbe9e7; --mid:#8a5a00; --mid-bg:#fdf2dc; }
+  :root {
+    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373;
+    --line:#e5e5e5; --code-bg:#f5f5f5;
+    --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0;
+    --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
+    --red:#9f1239; --red-bg:#fff1f2; --red-line:#fecdd3; --red-edge:#e11d48;
+    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width:960px; margin:0 auto; padding:32px 16px 64px; }
-  h1 { font-size:1.5rem; line-height:1.3; margin:0 0 8px; }
-  h2 { font-size:1.1rem; margin:36px 0 12px; padding-top:16px; border-top:1px solid var(--line); }
-  .meta { color:var(--muted); font-size:.9rem; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:12px 0; }
-  .rec { border-left:4px solid var(--ok); }
-  .none { border-left:4px solid var(--mid); }
-  .note { color:var(--muted); font-size:.92rem; }
-  .scroll { overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--card); }
-  table { border-collapse:collapse; width:100%; min-width:640px; font-size:.92rem; }
-  th, td { text-align:left; vertical-align:top; padding:10px 12px; border-bottom:1px solid var(--line); }
-  th { background:#f3f1ec; font-weight:600; }
-  tr:last-child td { border-bottom:0; }
-  code { font:.86rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background:#f3f1ec; padding:1px 4px; border-radius:4px; word-break:break-word; }
-  .tag { display:inline-block; padding:1px 8px; border-radius:999px; font-size:.8rem; font-weight:600; white-space:nowrap; }
-  .fixes, .clean, .yes { background:var(--ok-bg); color:var(--ok); }
-  .partly, .unknown { background:var(--mid-bg); color:var(--mid); }
-  .no, .conflicts, .fail { background:var(--bad-bg); color:var(--bad); }
-  .muted { color:var(--muted); }
-  ol { padding-left:22px; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 var(--sans); }
+  a { color:inherit; }
+  /* navigation: one sticky bar across the top */
+  nav { position:sticky; top:0; z-index:10; background:rgba(255,255,255,.96); border-bottom:1px solid var(--line);
+        backdrop-filter:blur(6px); }
+  nav .bar { max-width:1200px; margin:0 auto; padding:10px 32px; display:flex; align-items:center; gap:24px; }
+  nav .who { display:flex; gap:10px; align-items:baseline; flex-shrink:0; }
+  nav .repo { font-size:13px; color:var(--muted); }
+  nav .issue { font-weight:600; color:var(--ink); font-size:14px; }
+  nav ul { list-style:none; margin:0 0 0 auto; padding:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+  nav li { flex-shrink:0; }
+  nav a { display:block; padding:5px 10px; border-radius:6px; text-decoration:none; color:var(--soft); font-size:14px; }
+  nav a:hover { background:#f5f5f5; color:var(--ink); }
+  nav a.active { background:#f0f0f0; color:var(--ink); font-weight:500; }
+
+  main { padding:32px 32px 80px; }
+  .page { max-width:1200px; margin:0 auto; }
+  section { scroll-margin-top:72px; margin-top:40px; }
+  h1 { font-size:26px; line-height:1.3; color:var(--ink); margin:0 0 8px; letter-spacing:-.01em; overflow-wrap:break-word; }
+  h2 { font-size:17px; color:var(--ink); margin:0 0 6px; }
+  .meta { color:var(--soft); font-size:14px; padding-bottom:24px; border-bottom:1px solid var(--line); }
+  .intro { color:var(--soft); font-size:14px; margin:0 0 12px; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-top:10px; }
+  .verdict { border:2px solid var(--ink); padding:20px 22px; margin-top:28px; }
+  .verdict.none { border-color:var(--amber-line); background:var(--amber-bg); }
+  .verdict h3 { font-size:18px; margin:0; color:var(--ink); }
+  .verdict .sub { color:var(--soft); font-size:14px; margin:4px 0 0; }
+  .verdict .counts { border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:14px; color:var(--soft); }
+  .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .pills { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; flex-shrink:0; }
+
+  .pill { display:inline-block; padding:1px 8px; border-radius:4px; font-size:13px; font-weight:500; border:1px solid; white-space:nowrap; }
+  .pill.green { background:var(--green-bg); color:var(--green); border-color:var(--green-line); }
+  .pill.amber { background:var(--amber-bg); color:var(--amber); border-color:var(--amber-line); }
+  .pill.red { background:var(--red-bg); color:var(--red); border-color:var(--red-line); }
+  .pill.grey { background:#f5f5f5; color:var(--soft); border-color:var(--line); }
+
+  details summary { cursor:pointer; color:var(--ink); font-size:14px; text-decoration:underline; text-underline-offset:3px; margin-top:10px; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details[open] summary { margin-bottom:8px; }
+
+  ol.steps { margin:0; padding-left:22px; }
+  ol.steps li { margin:6px 0; padding-left:4px; }
+  ol.steps li::marker { font-weight:600; color:var(--muted); }
+
+  .loc { font:500 14px/1.4 var(--mono); color:var(--ink); overflow-wrap:anywhere; }
+  .quote { background:var(--code-bg); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin:10px 0 8px;
+           font:13px/1.5 var(--mono); color:var(--ink); white-space:pre-wrap; overflow-wrap:break-word; }
+  .why { font-size:14px; color:var(--text); margin:0; }
+  .card.failed { border-left:3px solid var(--red-edge); }
+
+  .note { background:#f5f5f5; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:14px; margin-top:4px; }
+  .pr.recommended { border:2px solid var(--ink); }
+  .pr .title { font-weight:500; color:var(--ink); }
+  .pr .title a { text-decoration:none; }
+  .pr .title a:hover { text-decoration:underline; }
+  .pr .by { color:var(--muted); font-size:14px; }
+  .pr .why { margin-top:6px; }
+  .pr .because { font:12px/1.5 var(--mono); color:var(--muted); margin-top:8px; overflow-wrap:anywhere; }
+  .fold { background:var(--card); border:1px solid var(--line); border-radius:8px; margin-top:10px; padding:12px 18px; }
+  .fold > summary { margin:0; text-decoration:none; display:flex; justify-content:space-between; }
+  .fold > summary .show { text-decoration:underline; text-underline-offset:3px; }
+  .fold .pr { border:0; border-top:1px solid var(--line); border-radius:0; padding:12px 0 0; margin-top:12px; }
+
+  .limits ul { margin:6px 0 0; padding-left:20px; font-size:14px; }
+  .limits li { margin:6px 0; }
+
+  .tiles { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:16px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .tile .big { font-size:24px; font-weight:600; color:var(--ink); line-height:1.2; }
+  .tile .small { font-size:13px; color:var(--soft); margin-top:4px; }
+
+  .flow { display:grid; grid-template-columns:repeat(3, 1fr); gap:28px 30px; margin-top:12px; counter-reset:step; }
+  .flow .box { position:relative; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .flow .box.last { border:2px solid var(--ink); }
+  .flow .box.failed { border-color:var(--red-edge); }
+  .flow .box .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+  .flow .box .loc { font-size:12px; }
+  .flow .box .label { font-weight:600; color:var(--ink); font-size:14px; margin-top:6px; }
+  .flow .box .num { font-size:12px; color:var(--muted); }
+  .flow .box:not(:last-child):not(:nth-child(3n))::after { content:"→"; position:absolute; right:-23px; top:50%;
+       transform:translateY(-50%); color:var(--muted); font-size:16px; }
+  .flow .step { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+       background:var(--ink); color:#fff; font-size:12px; font-weight:600; flex-shrink:0; }
+  .flow .box .head { display:flex; gap:8px; align-items:center; min-width:0; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .cols .card { margin-top:0; height:100%; }
+
+  .files { columns:3 340px; column-gap:14px; }
+  .files .file { break-inside:avoid; margin-bottom:14px; }
+  .whys { display:grid; grid-template-columns:repeat(auto-fit, minmax(420px, 1fr)); gap:0 14px; align-items:start; }
+  .file { background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .file > .fhead { display:flex; justify-content:space-between; gap:8px; padding:10px 14px; background:#fafafa; border-bottom:1px solid var(--line); }
+  .file > .fhead .loc { font-size:13px; }
+  .file .cite { padding:12px 14px; border-top:1px solid var(--line); }
+  .file .cite:first-of-type { border-top:0; }
+  .file .cite.failed { border-left:3px solid var(--red-edge); }
+  .file .cite .quote { margin:8px 0 6px; }
+  .count { font-size:12px; color:var(--soft); background:#f0f0f0; border-radius:999px; padding:1px 8px; white-space:nowrap; flex-shrink:0; }
+
+  .funnel { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:12px 0 16px; }
+  .funnel .stage { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:14px; position:relative; }
+  .funnel .stage b { display:block; font-size:20px; color:var(--ink); }
+  .funnel .stage.end { background:var(--green-bg); border-color:var(--green-line); }
+  .funnel .stage.end.none { background:var(--amber-bg); border-color:var(--amber-line); }
+
+  .board { display:grid; grid-template-columns:90px 1fr 1fr; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--card); }
+  .board > div { padding:10px; border-top:1px solid var(--line); border-left:1px solid var(--line); }
+  .board > .h { font-size:12px; font-weight:600; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; background:#fafafa; }
+  .board > .h.row { display:flex; align-items:center; }
+  .board > div:nth-child(-n+3) { border-top:0; }
+  .board > div:nth-child(3n+1) { border-left:0; }
+  .board .empty { color:var(--muted); text-align:center; }
+  .mini { border:1px solid var(--line); border-radius:6px; padding:8px 10px; margin-bottom:8px; font-size:14px; }
+  .mini:last-child { margin-bottom:0; }
+  .mini.recommended { border:2px solid var(--ink); }
+  .mini .by { color:var(--muted); font-size:12px; }
+  .mini a { text-decoration:none; color:var(--ink); font-weight:500; }
+  .mini a:hover { text-decoration:underline; }
+  .detail-head { font-size:14px; font-weight:600; color:var(--ink); margin:20px 0 0; }
+
+  @media (max-width: 960px) {
+    .tiles { grid-template-columns:repeat(2, 1fr); }
+  }
+
+  @media (max-width: 760px) {
+    nav .bar { flex-direction:column; align-items:stretch; gap:6px; padding:10px 16px 6px; }
+    nav .who { justify-content:space-between; }
+    nav ul { margin:0; }
+    nav a { padding:4px 10px; font-size:13px; }
+    .whys { grid-template-columns:1fr; }
+    main { padding:24px 16px 64px; }
+    h1 { font-size:21px; }
+    section { scroll-margin-top:100px; }
+    .row { flex-direction:column; gap:8px; }
+    .pills { justify-content:flex-start; }
+    .verdict { padding:16px; }
+    .cols { grid-template-columns:1fr; }
+    .flow { grid-template-columns:1fr; gap:22px; }
+    .flow .box:not(:last-child):not(:nth-child(3n))::after,
+    .flow .box:nth-child(3n):not(:last-child)::after { content:"↓"; position:absolute; right:auto; left:50%; top:auto;
+       bottom:-21px; transform:none; color:var(--muted); font-size:16px; }
+    .funnel { grid-template-columns:1fr 1fr; }
+    .board { grid-template-columns:1fr; }
+    .board > div { border-left:0 !important; }
+    .board > .h.col, .board > .corner { display:none; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <h1>{{ title }}</h1>
-  <p class="meta"><code>{{ repo }}</code> at <code>{{ commit }}</code> · investigation {{ id }} ({{ status }}, {{ created }}) · investigation cost ${{ "%.2f"|format(cost) }} · prepared by escalation-gate</p>
-
-  <h2>Summary</h2>
-  <div class="card">
-    <p>{{ report.cause }}</p>
-    <p class="note">Confidence: {{ report.confidence }}.</p>
+<nav>
+  <div class="bar">
+    <div class="who"><span class="issue">{{ label }}</span><span class="repo">{{ repo }}</span></div>
+    <ul>
+      <li><a href="#verdict">Verdict</a></li>
+      {% if chain %}<li><a href="#breaks">How it breaks</a></li>{% endif %}
+      <li><a href="#overview">What's wrong</a></li>
+      <li><a href="#cause">Evidence</a></li>
+      <li><a href="#prs">Pull requests</a></li>
+      <li><a href="#limits">Limits</a></li>
+    </ul>
   </div>
-  {% if recommended %}
-  <div class="card rec"><strong>Recommended: merge #{{ recommended.pr }}</strong> ({{ recommended.title }}). It was judged to fix the cause from its diff, not run, and it merges clean.</div>
-  {% else %}
-  <div class="card none"><strong>No open PR was found that fixes this cause and merges clean.</strong></div>
-  {% endif %}
-  <p class="note">Open PRs judged: {{ verdicts|length }} ({{ counts.fixes }} fix, {{ counts.partly }} partly, {{ counts.no }} don't).</p>
+</nav>
 
-  <h2>How to reproduce</h2>
-  <ol>{% for step in report.repro %}<li>{{ step }}</li>{% endfor %}</ol>
+<main><div class="page">
+    <header>
+      <h1>{{ title }}</h1>
+      <div class="meta">{{ repo }} · commit {{ commit }} · investigation <span class="pill {{ 'green' if status == 'verified' else 'amber' }}">{{ status }}</span> · {{ created }} · investigation cost ${{ "%.2f"|format(cost) }}</div>
+    </header>
 
-  <h2>Root cause</h2>
-  <p class="note">Every citation was checked against the code at <code>{{ commit }}</code>: the file exists, the line exists, and the quote is on that line (±5 lines). The reasoning that links them is the model's and is <strong>not</strong> checked.</p>
-  <div class="scroll"><table>
-    <tr><th></th><th>Location</th><th>Quote</th><th>Why it matters</th></tr>
-    {% for e in report.evidence %}
-    <tr><td><span class="tag {{ 'yes' if e.checked else 'fail' }}">{{ "checked" if e.checked else "failed" }}</span></td>
-        <td><code>{{ e.file }}:{{ e.line }}</code></td><td><code>{{ e.quote }}</code></td><td>{{ e.why }}</td></tr>
-    {% endfor %}
-  </table></div>
+    <section id="verdict" style="margin-top:0">
+      {% if recommended %}
+      <div class="card verdict">
+        <div class="row">
+          <div>
+            <h3>Recommended: merge #{{ recommended.pr }}</h3>
+            <p class="sub">{{ recommended.title }}</p>
+          </div>
+          <div class="pills">
+            <span class="pill green">Fixes the cause · judged from diff</span>
+            <span class="pill green">Merges clean · git check</span>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="card verdict none">
+        <h3>No open PR fixes this and merges clean</h3>
+        {% if counts.fixes or counts.partly %}<p class="sub">{{ counts.fixes }} fix it but don't merge clean, {{ counts.partly }} fix it partly. See the board below.</p>{% endif %}
+      </div>
+      {% endif %}
+      <div class="tiles">
+        <div class="tile"><div class="big">{{ verified }}/{{ report.evidence|length }}</div><div class="small">citations verified in code</div></div>
+        <div class="tile"><div class="big">{% if open_prs is not none %}{{ open_prs }} → {% endif %}{{ verdicts|length }}</div><div class="small">open PRs shortlisted by cited lines</div></div>
+        <div class="tile"><div class="big">{{ counts.fixes }} fix</div><div class="small">{{ board.fixes.clean|length }} merge clean · {{ counts.partly }} partly</div></div>
+        <div class="tile"><div class="big">${{ "%.2f"|format(cost) }}</div><div class="small">investigation cost</div></div>
+      </div>
+    </section>
 
-  <h2>Open PRs checked against this cause</h2>
-  {% if verdicts %}
-  <p class="note">Each verdict is judged from the diff, not run. Merge status is a real <code>git merge-tree</code> check against <code>{{ commit }}</code>.</p>
-  {% if competing|length > 1 %}<div class="card">{{ competing|joined }} all change the cause. Once one is merged, the others duplicate it.</div>{% endif %}
-  <div class="scroll"><table>
-    <tr><th>PR</th><th>Verdict</th><th>Merge</th><th>Why</th><th>Shortlisted because</th></tr>
-    {% for v in verdicts %}
-    <tr><td><a href="https://github.com/{{ repo }}/pull/{{ v.pr }}">#{{ v.pr }}</a> {{ v.title }}<br><span class="muted">by {{ v.author }}</span></td>
-        <td><span class="tag {{ v.verdict }}">{{ v.verdict }}</span></td>
-        <td>{% if v.merge %}<span class="tag {{ v.merge }}">{{ merge_label[v.merge] }}</span>{% else %}<span class="muted">not checked</span>{% endif %}</td>
-        <td>{{ v.why }}</td><td class="muted">{{ v.reasons|join(", ") }}</td></tr>
-    {% endfor %}
-  </table></div>
-  {% else %}
-  <p>No open PR changes a cited line or mentions the issue.</p>
-  {% endif %}
+    {% if chain %}
+    <section id="breaks">
+      <h2>How it breaks</h2>
+      <p class="intro">The path is the model's reasoning. Each box is a citation checked against the code.</p>
+      <div class="flow">
+        {% for c in chain %}
+        <div class="box{{ ' last' if loop.last else '' }}{{ ' failed' if not c.checked else '' }}">
+          <div class="top">
+            <span class="head"><span class="step">{{ loop.index }}</span><span class="loc" title="{{ c.loc }}">{{ c.short }}</span></span>
+            {% if c.checked %}<span class="pill green">✓</span>{% else %}<span class="pill red">failed</span>{% endif %}
+          </div>
+          <div class="label">{{ c.step }}</div>
+          {% if loop.last %}<div class="num">where it shows</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
-  <h2>Limits of this packet</h2>
-  <ul>
-    <li>Citations are checked against the code. The explanation that links them, and any claim about outside systems (APIs, libraries), is the model's reasoning and is not checked.</li>
-    <li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
-    <li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers have drifted, is missed, so this is not proof that no other PR fixes it.</li>
-  </ul>
-</main>
+    <section id="overview">
+      <div class="cols">
+        <div class="card" id="wrong">
+          <h2>What's wrong</h2>
+          {{ cause_lead }}
+          {% if cause_rest %}
+          <details><summary>Show full explanation</summary>{{ cause_rest }}</details>
+          {% endif %}
+          <div class="intro" style="margin:10px 0 0">Model confidence: {{ report.confidence }}.</div>
+        </div>
+        <div class="card" id="reproduce">
+          <h2>How to reproduce</h2>
+          <ol class="steps">{% for step in report.repro %}<li>{{ step }}</li>{% endfor %}</ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="cause">
+      <h2>Evidence</h2>
+      <p class="intro">Each citation was checked against the code at {{ commit }}.</p>
+      <div class="files">
+        {% for g in files %}
+        <div class="file">
+          <div class="fhead"><span class="loc">{{ g.file }}</span><span class="count">{{ g["items"]|length }} citation{{ 's' if g["items"]|length != 1 else '' }}</span></div>
+          {% for e in g["items"] %}
+          <div class="cite{{ '' if e.checked else ' failed' }}">
+            <div class="row">
+              <span class="loc">line {{ e.line }}</span>
+              <div class="pills">{% if e.checked %}<span class="pill green">verified in code</span>{% else %}<span class="pill red">failed check</span>{% endif %}</div>
+            </div>
+            <div class="quote">{{ e.quote }}</div>
+            <p class="why">{{ e.why }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section id="prs">
+      <h2>Pull requests</h2>
+      {% if verdicts %}
+      <p class="intro">Verdicts are judged from the diff, not run. Merge status is a real git check against {{ commit }}.</p>
+      <div class="funnel">
+        {% if open_prs is not none %}<div class="stage"><b>{{ open_prs }}</b>open PRs</div>{% endif %}
+        <div class="stage"><b>{{ verdicts|length }}</b>change a cited line{{ ' or mention the issue' if title.startswith('Issue #') else '' }}</div>
+        <div class="stage"><b>{{ judged|length }}</b>change the cause</div>
+        <div class="stage end{{ '' if recommended else ' none' }}"><b>{{ board.fixes.clean|length }}</b>fix{{ 'es' if board.fixes.clean|length == 1 else '' }} and merge{{ 's' if board.fixes.clean|length == 1 else '' }} clean</div>
+      </div>
+      {% if competing|length > 1 %}<div class="note">{{ competing|joined }} all change the cause. Once one is merged, the others duplicate it.</div>{% endif %}
+      {% if judged %}
+      <div class="board" style="margin-top:12px">
+        <div class="h corner"></div><div class="h col">Merges clean</div><div class="h col">Conflicts or unknown</div>
+        {% for verdict in ("fixes", "partly") %}
+        <div class="h row">{{ verdict|capitalize }}</div>
+        {% for merge in ("clean", "conflicts") %}
+        <div>
+          {% for v in board[verdict][merge] %}
+          <div class="mini{{ ' recommended' if recommended and v.pr == recommended.pr else '' }}">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              {% if recommended and v.pr == recommended.pr %}<span class="pill green">recommended</span>{% endif %}
+              <span class="pill {{ 'green' if v.verdict == 'fixes' else 'amber' }}">{{ v.verdict|capitalize }}</span>
+              <span class="pill {{ {'clean': 'green', 'conflicts': 'red'}.get(v.merge, 'grey') }}">{{ merge_label[v.merge]|capitalize }}</span>
+            </div>
+            <a href="#pr-{{ v.pr }}">#{{ v.pr }} · {{ v.title }}</a> <span class="by">by {{ v.author }}</span>
+          </div>
+          {% else %}<div class="empty">—</div>{% endfor %}
+        </div>
+        {% endfor %}
+        {% endfor %}
+      </div>
+      <div class="detail-head">Why each verdict</div>
+      <div class="whys">
+      {% for v in judged %}
+      <div class="card pr{{ ' recommended' if recommended and v.pr == recommended.pr else '' }}" id="pr-{{ v.pr }}">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/{{ repo }}/pull/{{ v.pr }}">#{{ v.pr }} · {{ v.title }}</a></span> <span class="by">by {{ v.author }}</span></div>
+          <div class="pills">
+            <span class="pill {{ 'green' if v.verdict == 'fixes' else 'amber' }}">{{ v.verdict|capitalize }}</span>
+            <span class="pill {{ {'clean': 'green', 'conflicts': 'red'}.get(v.merge, 'grey') }}">{{ merge_label[v.merge]|capitalize }}</span>
+          </div>
+        </div>
+        <p class="why">{{ v.why }}</p>
+        <div class="because">Shortlisted because: {{ v.reasons|join(", ") }}</div>
+      </div>
+      {% endfor %}
+      </div>
+      {% endif %}
+      {% if rejected %}
+      <details class="fold">
+        <summary><span>{{ rejected|length }} PRs that don't fix it</span><span class="show">Show</span></summary>
+        {% for v in rejected %}
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/{{ repo }}/pull/{{ v.pr }}">#{{ v.pr }} · {{ v.title }}</a></span> <span class="by">by {{ v.author }}</span></div>
+          <p class="why">{{ v.why }}</p>
+          <div class="because">Shortlisted because: {{ v.reasons|join(", ") }}</div>
+        </div>
+        {% endfor %}
+      </details>
+      {% endif %}
+      {% else %}
+      <div class="card">No open PR changes a cited line or mentions the issue.</div>
+      {% endif %}
+    </section>
+
+    <section id="limits" class="limits">
+      <div class="card">
+        <h2>What this packet does not prove</h2>
+        <ul>
+          <li>Citations are checked against the code. The explanation that links them, the order of the chain, and any claim about outside systems (APIs, libraries) are the model's reasoning and are not checked.</li>
+          <li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+          <li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers have drifted, is missed, so this is not proof that no other PR fixes it.</li>
+        </ul>
+      </div>
+    </section>
+</div></main>
+<script>
+  // highlight the section currently on screen in the navigation
+  const links = [...document.querySelectorAll("nav a")];
+  const seen = new IntersectionObserver(entries => {
+    for (const entry of entries) if (entry.isIntersecting) {
+      links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id));
+    }
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  document.querySelectorAll("main section").forEach(s => seen.observe(s));
+</script>
 </body>
 </html>

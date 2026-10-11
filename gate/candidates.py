@@ -167,43 +167,37 @@ def judge(prompt: str, expected: list[int], model: str | None = None) -> tuple[l
     return verdicts, problems, costs
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Judge the open PRs against one investigation.")
-    parser.add_argument("--investigation", type=int, required=True, help="id in the investigations table")
-    parser.add_argument("--model", help="e.g. sonnet or opus")
-    args = parser.parse_args()
-
-    conn = connect()
-    row = conn.execute("SELECT repo, issue, status, report FROM investigations WHERE id = %s",
-                       (args.investigation,)).fetchone()
+def run(conn, inv_id: int, model: str | None = None) -> list[str]:
+    """Shortlist and judge the open PRs for one investigation, store and print the verdicts; return problems."""
+    row = conn.execute("SELECT repo, issue, status, report FROM investigations WHERE id = %s", (inv_id,)).fetchone()
     if row is None or row[3] is None:
-        sys.exit(f"investigation {args.investigation} has no report")
+        sys.exit(f"investigation {inv_id} has no report")
     repo, issue, status, report = row
     if status != "verified":
-        print(f"warning: investigation {args.investigation} is '{status}', so its citations are not all checked")
+        print(f"warning: investigation {inv_id} is '{status}', so its citations are not all checked")
 
     candidates = shortlist(conn, repo, issue, report)
     if len(candidates) > MAX_CANDIDATES:
         print(f"{len(candidates)} candidates; judging the top {MAX_CANDIDATES}")
         candidates = candidates[:MAX_CANDIDATES]
+    conn.execute("DELETE FROM pr_verdicts WHERE investigation_id = %s", (inv_id,))
+    conn.commit()
     if not candidates:
         print("no open PR touches the cited lines or mentions the issue")
-        return 0
+        return []
 
     expected = [c["pr"] for c in candidates]
-    verdicts, problems, costs = judge(build_prompt(conn, repo, report, candidates), expected, args.model)
+    verdicts, problems, costs = judge(build_prompt(conn, repo, report, candidates), expected, model)
 
     reasons = {c["pr"]: c["reasons"] for c in candidates}
-    conn.execute("DELETE FROM pr_verdicts WHERE investigation_id = %s", (args.investigation,))
     for v in verdicts:
         if v["pr"] in reasons:
             conn.execute(
                 """INSERT INTO pr_verdicts (investigation_id, pr, reasons, verdict, why)
                    VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""",
-                (args.investigation, v["pr"], reasons[v["pr"]], v["verdict"], v["why"]),
+                (inv_id, v["pr"], reasons[v["pr"]], v["verdict"], v["why"]),
             )
     conn.commit()
-    conn.close()
 
     order = {"fixes": 0, "partly": 1, "no": 2}
     print(f"{len(candidates)} PRs judged, cost ${sum(costs):.2f}")
@@ -211,6 +205,18 @@ def main() -> int:
         print(f"#{v['pr']:<5} {v['verdict']:<7} {v['why']}")
     for p in problems:
         print("FAILED:", p)
+    return problems
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Judge the open PRs against one investigation.")
+    parser.add_argument("--investigation", type=int, required=True, help="id in the investigations table")
+    parser.add_argument("--model", help="e.g. sonnet or opus")
+    args = parser.parse_args()
+
+    conn = connect()
+    problems = run(conn, args.investigation, args.model)
+    conn.close()
     return 1 if problems else 0
 
 

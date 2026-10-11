@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Issue #424 · Technical Incident Dossier</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+<body class="bg-slate-50 text-[#09090b] antialiased font-['Inter',sans-serif] min-h-screen">
+<div class="flex min-h-screen">
+<!-- 1. SIDEBAR (sticky, left, width ~260px, border-r, p-6, min-h-screen) -->
+<aside class="w-[260px] flex-shrink-0 border-r border-neutral-200 bg-white p-6 sticky top-0 h-screen overflow-y-auto z-20 hidden md:block">
+<!-- Top block -->
+<div class="mb-8">
+<div class="text-sm font-medium text-neutral-500">interviewstreet/hiring-agent</div>
+<div class="text-lg font-semibold text-neutral-900 mt-0.5">Issue #424</div>
+</div>
+<!-- Links list -->
+<nav class="space-y-2 text-sm font-medium">
+<a class="block px-3 py-1.5 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors" href="#verdict">Verdict</a>
+<a class="block px-3 py-1.5 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors" href="#whats-wrong">What's wrong</a>
+<a class="block px-3 py-1.5 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors" href="#reproduce">Reproduce</a>
+<a class="block px-3 py-1.5 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors" href="#root-cause">Root cause</a>
+<a class="block px-3 py-1.5 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors" href="#pull-requests">Pull requests</a>
+<a class="block px-3 py-1.5 rounded-md text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors" href="#limits">Limits</a>
+</nav>
+</aside>
+<!-- 2. MAIN DOCUMENT (max-w-4xl p-8 space-y-8) -->
+<main class="flex-1 max-w-4xl mx-auto p-6 md:p-8 space-y-8">
+<!-- HEADER -->
+<section class="border-b border-neutral-200 pb-6">
+<h1 class="text-2xl md:text-[28px] leading-tight font-semibold text-neutral-900 mb-2">
+          Issue #424 · GitHub enrichment: project_type and contributor counts never reach the evaluator
+        </h1>
+<div class="text-sm text-neutral-600">
+          interviewstreet/hiring-agent · commit e0ece80 · investigation verified · cost $0.41
+        </div>
+</section>
+<!-- VERDICT CARD -->
+<section class="scroll-mt-6" id="verdict">
+<div class="p-6 rounded-lg bg-white border-2 border-neutral-900">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+<div>
+<h2 class="text-lg font-bold text-neutral-900 leading-snug">
+                Recommended: merge #425
+              </h2>
+<p class="text-sm text-neutral-600 mt-1">
+                GitHub enrichment: pass project_type and contributor counts through to the evaluator
+              </p>
+</div>
+<div class="flex flex-wrap sm:flex-col items-start sm:items-end gap-1.5 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Fixes the cause · judged from diff
+              </span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Merges clean · git check
+              </span>
+</div>
+</div>
+<div class="text-sm text-neutral-700 mt-4 pt-3 border-t border-neutral-200">
+            27 open PRs judged · 2 fix · 2 partly · 23 don't
+          </div>
+</div>
+</section>
+<!-- WHAT'S WRONG -->
+<section class="scroll-mt-6" id="whats-wrong">
+<h2 class="text-base font-semibold text-neutral-900 mb-2">What's wrong</h2>
+<div class="p-5 rounded-lg bg-white border border-neutral-200">
+<p class="text-sm text-neutral-800 leading-relaxed mb-3">
+            github.py labels each repo with project_type. The project-selection step drops the label, and transform.py never prints it, so the grader is told to score by a label it never sees.
+          </p>
+<a class="text-sm text-neutral-600 hover:text-neutral-900 underline" href="#root-cause">Show full explanation</a>
+</div>
+</section>
+<!-- HOW TO REPRODUCE -->
+<section class="scroll-mt-6" id="reproduce">
+<h2 class="text-base font-semibold text-neutral-900 mb-2">How to reproduce</h2>
+<div class="p-5 rounded-lg bg-white border border-neutral-200 space-y-3">
+<div class="flex items-start gap-3">
+<span class="text-sm font-semibold text-neutral-500 w-4">1.</span>
+<p class="text-sm text-neutral-800 leading-relaxed">
+              Configure any LLM provider and run the pipeline on a profile with a GitHub repo that has several human contributors.
+            </p>
+</div>
+<div class="flex items-start gap-3">
+<span class="text-sm font-semibold text-neutral-500 w-4">2.</span>
+<p class="text-sm text-neutral-800 leading-relaxed">
+              In generate_projects_json (github.py), print selected_projects after json.loads. The objects have no project_type or contributor_count keys.
+            </p>
+</div>
+<div class="flex items-start gap-3">
+<span class="text-sm font-semibold text-neutral-500 w-4">3.</span>
+<p class="text-sm text-neutral-800 leading-relaxed">
+              Print the output of transform.convert_github_data_to_text. Each project shows only description, URL, stars, forks and language, with no Type line.
+            </p>
+</div>
+<div class="flex items-start gap-3">
+<span class="text-sm font-semibold text-neutral-500 w-4">4.</span>
+<p class="text-sm text-neutral-800 leading-relaxed">
+              Check the evaluator's scoring evidence: it treats the projects as self_project, because criteria.jinja lines 61 and 176 key on a field it never receives.
+            </p>
+</div>
+</div>
+</section>
+<!-- ROOT CAUSE -->
+<section class="scroll-mt-6" id="root-cause">
+<h2 class="text-base font-semibold text-neutral-900 mb-1">Root cause</h2>
+<p class="text-sm text-neutral-600 mb-4">
+          Each citation was checked against the code at e0ece80. The reasoning that links them is the model's and is not checked.
+        </p>
+<div class="space-y-3">
+<!-- Card 1 -->
+<div class="p-4 rounded-lg bg-white border border-neutral-200">
+<div class="flex items-center justify-between mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-sm text-neutral-900 font-medium">github.py:246</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                verified in code
+              </span>
+</div>
+<div class="bg-neutral-100 border border-neutral-200 rounded p-3 font-['JetBrains_Mono',monospace] text-xs sm:text-sm text-neutral-900 mb-2 overflow-x-auto">
+<code>project_type = (</code>
+</div>
+<p class="text-sm text-neutral-700">
+              The classification is computed per repo here: open_source if contributor_count &gt; 1, otherwise self_project.
+            </p>
+</div>
+<!-- Card 2 -->
+<div class="p-4 rounded-lg bg-white border border-neutral-200">
+<div class="flex items-center justify-between mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-sm text-neutral-900 font-medium">github.py:352</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                verified in code
+              </span>
+</div>
+<div class="bg-neutral-100 border border-neutral-200 rounded p-3 font-['JetBrains_Mono',monospace] text-xs sm:text-sm text-neutral-900 mb-2 overflow-x-auto">
+<code>"project_type": project.get("project_type", "self_project"),</code>
+</div>
+<p class="text-sm text-neutral-700">
+              The fields are sent to the selection LLM as input.
+            </p>
+</div>
+<!-- Card 3 -->
+<div class="p-4 rounded-lg bg-white border border-neutral-200">
+<div class="flex items-center justify-between mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-sm text-neutral-900 font-medium">prompts/templates/github_project_selection.jinja:81</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                verified in code
+              </span>
+</div>
+<div class="bg-neutral-100 border border-neutral-200 rounded p-3 font-['JetBrains_Mono',monospace] text-xs sm:text-sm text-neutral-900 mb-2 overflow-x-auto">
+<code>"author_commit_count": 0,</code>
+</div>
+<p class="text-sm text-neutral-700">
+              The required output schema has no project_type or contributor_count, so the model is not asked to return them.
+            </p>
+</div>
+<!-- Card 4 -->
+<div class="p-4 rounded-lg bg-white border border-neutral-200">
+<div class="flex items-center justify-between mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-sm text-neutral-900 font-medium">github.py:411</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                verified in code
+              </span>
+</div>
+<div class="bg-neutral-100 border border-neutral-200 rounded p-3 font-['JetBrains_Mono',monospace] text-xs sm:text-sm text-neutral-900 mb-2 overflow-x-auto">
+<code>unique_projects.append(project)</code>
+</div>
+<p class="text-sm text-neutral-700">
+              The LLM-returned object is appended as-is, with nothing re-attached.
+            </p>
+</div>
+<!-- Card 5 -->
+<div class="p-4 rounded-lg bg-white border border-neutral-200">
+<div class="flex items-center justify-between mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-sm text-neutral-900 font-medium">transform.py:897</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                verified in code
+              </span>
+</div>
+<div class="bg-neutral-100 border border-neutral-200 rounded p-3 font-['JetBrains_Mono',monospace] text-xs sm:text-sm text-neutral-900 mb-2 overflow-x-auto">
+<code>github_text += f"   URL: {project.get('github_url', 'N/A')}\n"</code>
+</div>
+<p class="text-sm text-neutral-700">
+              convert_github_data_to_text never prints project_type or the counts.
+            </p>
+</div>
+<!-- Card 6 -->
+<div class="p-4 rounded-lg bg-white border border-neutral-200">
+<div class="flex items-center justify-between mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-sm text-neutral-900 font-medium">roles/software_engineering_intern/criteria.jinja:61</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                verified in code
+              </span>
+</div>
+<div class="bg-neutral-100 border border-neutral-200 rounded p-3 font-['JetBrains_Mono',monospace] text-xs sm:text-sm text-neutral-900 mb-2 overflow-x-auto">
+<code>- When GitHub data shows all projects are 'self_project' type, open source score MUST be 10 points or less</code>
+</div>
+<p class="text-sm text-neutral-700">
+              The rubric depends on a project type that is never delivered.
+            </p>
+</div>
+<!-- Card 7 (FAILED STATE design) -->
+<div class="p-4 rounded-lg bg-white border border-neutral-200 border-l-4 border-l-rose-500">
+<div class="flex items-center justify-between mb-2">
+<span class="font-['JetBrains_Mono',monospace] text-sm text-neutral-900 font-medium">github.py:454</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-rose-50 text-rose-800 border border-rose-200">
+                failed check
+              </span>
+</div>
+<div class="bg-neutral-100 border border-neutral-200 rounded p-3 font-['JetBrains_Mono',monospace] text-xs sm:text-sm text-neutral-900 mb-2 overflow-x-auto">
+<code>"project_type": project.get("project_type", "self_project"),</code>
+</div>
+<p class="text-sm text-neutral-700">
+              Only the fallback paths keep these fields.
+            </p>
+</div>
+</div>
+</section>
+<!-- PULL REQUESTS -->
+<section class="scroll-mt-6" id="pull-requests">
+<h2 class="text-base font-semibold text-neutral-900 mb-1">Pull requests</h2>
+<p class="text-sm text-neutral-600 mb-3">
+          Verdicts are judged from the diff, not run. Merge status is a real git check.
+        </p>
+<!-- Info note -->
+<div class="p-3 rounded-lg bg-neutral-100 border border-neutral-200 text-sm text-neutral-800 mb-4">
+          #415, #425, #242 and #462 all change the cause. Once one is merged, the others duplicate it.
+        </div>
+<div class="space-y-3 mb-3">
+<!-- Row 1 (#425 - recommended row) -->
+<div class="border-2 border-neutral-900 rounded-lg p-4 bg-white">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-1">
+<div>
+<a class="font-medium text-sm text-neutral-900 hover:underline" href="#pull-requests">
+                  #425 · GitHub enrichment: pass project_type and contributor counts through to the evaluator
+                </a>
+<span class="text-sm text-neutral-500 ml-1">by Pieismath</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">Fixes</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">Merges clean</span>
+</div>
+</div>
+<p class="text-sm text-neutral-800 mt-2">
+              restore_repo_metadata re-attaches project_type and the counts after selection, and convert_github_data_to_text now prints a Type line.
+            </p>
+<div class="text-xs text-neutral-500 mt-2 font-['JetBrains_Mono',monospace]">
+              Shortlisted because: mentions the issue, changes transform.py:897
+            </div>
+</div>
+<!-- Row 2 (#415) -->
+<div class="border border-neutral-200 rounded-lg p-4 bg-white">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-1">
+<div>
+<a class="font-medium text-sm text-neutral-900 hover:underline" href="#pull-requests">
+                  #415 · feat: add AWS Bedrock provider transport
+                </a>
+<span class="text-sm text-neutral-500 ml-1">by sairam0424</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">Fixes</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-rose-50 text-rose-800 border border-rose-200">Conflicts</span>
+</div>
+</div>
+<p class="text-sm text-neutral-800 mt-2">
+              resolve_selected_projects rebuilds selected projects from the fetched data, and transform now prints the type.
+            </p>
+<div class="text-xs text-neutral-500 mt-2 font-['JetBrains_Mono',monospace]">
+              Shortlisted because: changes github.py:411, changes transform.py:897
+            </div>
+</div>
+<!-- Row 3 (#242) -->
+<div class="border border-neutral-200 rounded-lg p-4 bg-white">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-1">
+<div>
+<a class="font-medium text-sm text-neutral-900 hover:underline" href="#pull-requests">
+                  #242 · fix: validate LLM bonus claims and reject hallucinated GitHub projects
+                </a>
+<span class="text-sm text-neutral-500 ml-1">by Zem-0</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-amber-50 text-amber-800 border border-amber-200">Partly</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">Merges clean</span>
+</div>
+</div>
+<p class="text-sm text-neutral-800 mt-2">
+              restores the fields after selection, but transform.py is untouched so the evaluator still never sees them.
+            </p>
+<div class="text-xs text-neutral-500 mt-2 font-['JetBrains_Mono',monospace]">
+              Shortlisted because: changes github.py:411
+            </div>
+</div>
+<!-- Row 4 (#462) -->
+<div class="border border-neutral-200 rounded-lg p-4 bg-white">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-1">
+<div>
+<a class="font-medium text-sm text-neutral-900 hover:underline" href="#pull-requests">
+                  #462 · feat: add ensemble scoring to mitigate LLM non-determinism
+                </a>
+<span class="text-sm text-neutral-500 ml-1">by codesbysaravana</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-amber-50 text-amber-800 border border-amber-200">Partly</span>
+<span class="inline-flex items-center px-2 py-0.5 text-[13px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200">Merges clean</span>
+</div>
+</div>
+<p class="text-sm text-neutral-800 mt-2">
+              transform now prints the type, but nothing restores it on the selection path.
+            </p>
+<div class="text-xs text-neutral-500 mt-2 font-['JetBrains_Mono',monospace]">
+              Shortlisted because: changes transform.py:897
+            </div>
+</div>
+</div>
+<!-- Closed accordion row -->
+<div class="border border-neutral-200 rounded-lg p-3 bg-white flex items-center justify-between text-sm">
+<span class="text-neutral-700">23 PRs that don't fix it</span>
+<button class="text-neutral-600 hover:text-neutral-900 font-medium" type="button">Show</button>
+</div>
+</section>
+<!-- LIMITS -->
+<section class="scroll-mt-6" id="limits">
+<div class="border border-neutral-200 rounded-lg p-5 bg-white space-y-3">
+<h3 class="text-sm font-semibold text-neutral-900">What this packet does not prove</h3>
+<ul class="space-y-2 text-sm text-neutral-700 list-disc pl-5">
+<li>Citations are checked against the code. The explanation that links them, and any claim about outside systems, is the model's reasoning and is not checked.</li>
+<li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+<li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers drifted, is missed.</li>
+</ul>
+</div>
+</section>
+</main>
+</div>
+</body></html>

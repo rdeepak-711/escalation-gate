@@ -18,7 +18,7 @@ DISALLOWED = "Bash,Edit,Write,NotebookEdit,WebFetch,WebSearch,Task"
 
 SCHEMA = {
     "type": "object",
-    "required": ["cause", "repro", "evidence", "confidence"],
+    "required": ["cause", "repro", "evidence", "confidence", "chain"],
     "properties": {
         "cause": {"type": "string"},
         "repro": {"type": "array", "items": {"type": "string"}},
@@ -36,6 +36,17 @@ SCHEMA = {
             },
         },
         "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+        "chain": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["step", "evidence"],
+                "properties": {
+                    "step": {"type": "string", "maxLength": 60},
+                    "evidence": {"type": "integer"},
+                },
+            },
+        },
     },
 }
 
@@ -48,6 +59,7 @@ Rules:
 2. Every evidence item must give the file path relative to the repository root, the line number, and a quote copied exactly from that line (at most 200 characters; if the line is longer, quote only the relevant part).
 3. Give reproduction steps a developer can follow.
 4. If you cannot find evidence, say so and set confidence to "low".
+5. Give the chain: the cause as ordered steps, from where the problem starts to where it shows. Each step is a short label (at most 8 words) plus the number of the evidence item that proves it (1 = the first evidence item). Use only the steps your evidence supports.
 """
 
 RETRY_TEMPLATE = """Some of your evidence did not match the code:
@@ -123,6 +135,30 @@ def save(conn, repo: str, issue: int | None, symptom: str | None, outcome: dict)
     return row[0]
 
 
+def run(conn, repo: str, issue: int | None, symptom: str | None, model: str | None = None) -> tuple[int, dict]:
+    """Investigate one issue (read from Postgres) or symptom, save it, print the outcome; return (id, outcome)."""
+    repo_dir = ROOT / "vendor" / repo.split("/")[1]
+    if issue:
+        row = conn.execute("SELECT title, body FROM issues WHERE repo = %s AND number = %s",
+                           (repo, issue)).fetchone()
+        if row is None:
+            sys.exit(f"issue #{issue} is not in the database: run gate.collect first, or it is closed")
+        report_text = f"Issue #{issue}: {row[0]}\n\n{row[1]}"
+    else:
+        report_text = f"Reported symptom: {symptom}"
+
+    outcome = investigate(report_text, repo_dir, model=model)
+    inv_id = save(conn, repo, issue, symptom, outcome)
+
+    print(f"investigation {inv_id}: {outcome['status']} after {outcome['attempts']} attempt(s), "
+          f"cost ${sum(outcome['costs_usd']):.2f}, log {outcome['log']}")
+    if outcome["report"]:
+        print(json.dumps(outcome["report"], indent=2))
+    for failure in outcome["failures"]:
+        print("FAILED:", failure)
+    return inv_id, outcome
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Investigate one issue or symptom in a collected repo.")
     parser.add_argument("--repo", required=True, help="owner/name, already collected")
@@ -132,27 +168,9 @@ def main() -> int:
     parser.add_argument("--model", help="e.g. sonnet or opus; default is Claude Code's own")
     args = parser.parse_args()
 
-    repo_dir = ROOT / "vendor" / args.repo.split("/")[1]
     conn = connect()
-    if args.issue:
-        row = conn.execute("SELECT title, body FROM issues WHERE repo = %s AND number = %s",
-                           (args.repo, args.issue)).fetchone()
-        if row is None:
-            sys.exit(f"issue #{args.issue} is not in the database: run gate.collect first, or it is closed")
-        report_text = f"Issue #{args.issue}: {row[0]}\n\n{row[1]}"
-    else:
-        report_text = f"Reported symptom: {args.symptom}"
-
-    outcome = investigate(report_text, repo_dir, model=args.model)
-    inv_id = save(conn, args.repo, args.issue, args.symptom, outcome)
+    _, outcome = run(conn, args.repo, args.issue, args.symptom, args.model)
     conn.close()
-
-    print(f"investigation {inv_id}: {outcome['status']} after {outcome['attempts']} attempt(s), "
-          f"cost ${sum(outcome['costs_usd']):.2f}, log {outcome['log']}")
-    if outcome["report"]:
-        print(json.dumps(outcome["report"], indent=2))
-    for failure in outcome["failures"]:
-        print("FAILED:", failure)
     return 0 if outcome["status"] == "verified" else 1
 
 

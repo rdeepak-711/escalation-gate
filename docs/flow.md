@@ -1,6 +1,6 @@
 # Execution flow
 
-How a run travels through the code, file by file. Status as of 2026-10-11: steps 01–06 are built and tested (38 tests). Step 07 (one-command CLI + README) is **planned**.
+How a run travels through the code, file by file. Status as of 2026-10-11: steps 01–07 are built and tested (43 tests). One entry point: `python -m gate.cli --repo R (--issue N | --symptom S) [--model sonnet] [--refresh]`.
 
 ## The whole path (V1)
 
@@ -38,10 +38,12 @@ python -m gate.packet --investigation ID                                        
 
 ## Step by step, with the real functions
 
+0. **One command** — `gate/cli.py` `main()`: clone `vendor/<name>` if missing (`clone()`, `--filter=blob:none`, full history for merge checks); `collect()` if the repo has no PRs stored or `--refresh`; `investigate.run()`; stop if the status is `timeout`/`error`; `candidates.run()`; `packet.write()`; print the HTML path. Each stage's `main()` is now a thin wrapper around the same `run()`/`write()` function.
+
 1. **Collect** — `gate/collect.py` `collect(repo)`: `gh issue list` → upsert `issues`, delete closed; `gh pr list` → upsert `prs`, delete closed (cascade removes their `pr_files`); per PR `gh api …/pulls/N/files` → replace its `pr_files` rows; commit per PR.
 2. **Investigate** — `gate/investigate.py` `main()` reads the issue from Postgres (or takes `--symptom`), calls `investigate()`:
    - `run_claude(prompt, …, resume=False)` with a new `--session-id`.
-   - `check(report, repo_dir)` (`gate/check.py`): file inside repo, exists, line in range, quote within ±5 lines (whitespace-normalised).
+   - `check(report, repo_dir)` (`gate/check.py`): file inside repo, exists, line in range, quote within ±5 lines (whitespace-normalised); every `chain` step must point at an existing evidence item.
    - failures → `RETRY_TEMPLATE` → `run_claude(…, resume=True)` (same session); still failing → `needs_human`. Timeout or no structured output → stop, no retry.
    - `save()` inserts one `investigations` row (`RETURNING id`).
 3. **Candidates** — `gate/candidates.py` `main()`:
@@ -52,7 +54,7 @@ python -m gate.packet --investigation ID                                        
 4. **Packet** — `gate/packet.py` `main()` → `load()`:
    - re-runs `check()` so every ✅/❌ reflects the code at packet time;
    - `fetch_prs()` fetches heads of fixes/partly PRs into `refs/gate/pr/<n>`; `merge_status()` verifies the ref exists, then `git merge-tree --write-tree --quiet HEAD ref` → clean (0) / conflicts (1);
-   - `render_markdown()` / `render_html()` fill `gate/templates/packet.md.j2` / `packet.html.j2` (HTML autoescaped); `recommend()` picks the first "fixes" PR that merges clean.
+   - `context()` adds `group_by_file()`, `board()`, `chain()` and the open-PR count; `render_markdown()` / `render_html()` fill `gate/templates/packet.md.j2` / `packet.html.j2` (HTML autoescaped); `recommend()` picks the first "fixes" PR that merges clean.
 
 ## What the 2026-10-11 session touched
 
@@ -65,4 +67,4 @@ python -m gate.packet --investigation ID                                        
 
 - How `claude -p` decides which files to read happens inside Claude Code; we only see its event log.
 - A `RuntimeError` from `run_claude()` (Claude crashed) stops the program before `save()`, so no row records it.
-- Step 07's single entry point (`gate.cli`) does not exist yet; today it is four commands.
+- `gate.cli` treats any stored PR as "collected": data from days ago is reused unless `--refresh` is passed.

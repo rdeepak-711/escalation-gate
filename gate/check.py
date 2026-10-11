@@ -47,6 +47,10 @@ def check(report: dict, repo_dir: Path) -> list[str]:
         problem = check_item(item, repo_dir)
         if problem:
             failures.append(f"evidence {n}: {problem}")
+    for n, step in enumerate(report.get("chain", []), 1):
+        if not 1 <= step.get("evidence", 0) <= len(evidence):
+            failures.append(f"chain step {n}: points at evidence {step.get('evidence')}, "
+                            f"but there are only {len(evidence)} evidence items")
     return failures
 
 if __name__ == "__main__":
