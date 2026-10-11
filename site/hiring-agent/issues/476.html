@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #476 · escalation packet · interviewstreet/hiring-agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373;
+    --line:#e5e5e5; --code-bg:#f5f5f5;
+    --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0;
+    --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
+    --red:#9f1239; --red-bg:#fff1f2; --red-line:#fecdd3; --red-edge:#e11d48;
+    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 var(--sans); }
+  a { color:inherit; }
+  /* navigation: one sticky bar across the top */
+  nav { position:sticky; top:0; z-index:10; background:rgba(255,255,255,.96); border-bottom:1px solid var(--line);
+        backdrop-filter:blur(6px); }
+  nav .bar { max-width:1200px; margin:0 auto; padding:10px 32px; display:flex; align-items:center; gap:24px; }
+  nav .who { display:flex; gap:10px; align-items:baseline; flex-shrink:0; }
+  nav .repo { font-size:13px; color:var(--muted); }
+  nav .issue { font-weight:600; color:var(--ink); font-size:14px; }
+  nav ul { list-style:none; margin:0 0 0 auto; padding:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+  nav li { flex-shrink:0; }
+  nav a { display:block; padding:5px 10px; border-radius:6px; text-decoration:none; color:var(--soft); font-size:14px; }
+  nav a:hover { background:#f5f5f5; color:var(--ink); }
+  nav a.active { background:#f0f0f0; color:var(--ink); font-weight:500; }
+
+  main { padding:32px 32px 80px; }
+  .page { max-width:1200px; margin:0 auto; }
+  section { scroll-margin-top:72px; margin-top:40px; }
+  h1 { font-size:26px; line-height:1.3; color:var(--ink); margin:0 0 8px; letter-spacing:-.01em; overflow-wrap:break-word; }
+  h2 { font-size:17px; color:var(--ink); margin:0 0 6px; }
+  .meta { color:var(--soft); font-size:14px; padding-bottom:24px; border-bottom:1px solid var(--line); }
+  .intro { color:var(--soft); font-size:14px; margin:0 0 12px; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-top:10px; }
+  .verdict { border:2px solid var(--ink); padding:20px 22px; margin-top:28px; }
+  .verdict.none { border-color:var(--amber-line); background:var(--amber-bg); }
+  .verdict h3 { font-size:18px; margin:0; color:var(--ink); }
+  .verdict .sub { color:var(--soft); font-size:14px; margin:4px 0 0; }
+  .verdict .counts { border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:14px; color:var(--soft); }
+  .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .pills { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; flex-shrink:0; }
+
+  .pill { display:inline-block; padding:1px 8px; border-radius:4px; font-size:13px; font-weight:500; border:1px solid; white-space:nowrap; }
+  .pill.green { background:var(--green-bg); color:var(--green); border-color:var(--green-line); }
+  .pill.amber { background:var(--amber-bg); color:var(--amber); border-color:var(--amber-line); }
+  .pill.red { background:var(--red-bg); color:var(--red); border-color:var(--red-line); }
+  .pill.grey { background:#f5f5f5; color:var(--soft); border-color:var(--line); }
+
+  details summary { cursor:pointer; color:var(--ink); font-size:14px; text-decoration:underline; text-underline-offset:3px; margin-top:10px; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details[open] summary { margin-bottom:8px; }
+
+  ol.steps { margin:0; padding-left:22px; }
+  ol.steps li { margin:6px 0; padding-left:4px; }
+  ol.steps li::marker { font-weight:600; color:var(--muted); }
+
+  .loc { font:500 14px/1.4 var(--mono); color:var(--ink); overflow-wrap:anywhere; }
+  .quote { background:var(--code-bg); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin:10px 0 8px;
+           font:13px/1.5 var(--mono); color:var(--ink); white-space:pre-wrap; overflow-wrap:break-word; }
+  .why { font-size:14px; color:var(--text); margin:0; }
+  .card.failed { border-left:3px solid var(--red-edge); }
+
+  .note { background:#f5f5f5; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:14px; margin-top:4px; }
+  .pr.recommended { border:2px solid var(--ink); }
+  .pr .title { font-weight:500; color:var(--ink); }
+  .pr .title a { text-decoration:none; }
+  .pr .title a:hover { text-decoration:underline; }
+  .pr .by { color:var(--muted); font-size:14px; }
+  .pr .why { margin-top:6px; }
+  .pr .because { font:12px/1.5 var(--mono); color:var(--muted); margin-top:8px; overflow-wrap:anywhere; }
+  .fold { background:var(--card); border:1px solid var(--line); border-radius:8px; margin-top:10px; padding:12px 18px; }
+  .fold > summary { margin:0; text-decoration:none; display:flex; justify-content:space-between; }
+  .fold > summary .show { text-decoration:underline; text-underline-offset:3px; }
+  .fold .pr { border:0; border-top:1px solid var(--line); border-radius:0; padding:12px 0 0; margin-top:12px; }
+
+  .limits ul { margin:6px 0 0; padding-left:20px; font-size:14px; }
+  .limits li { margin:6px 0; }
+
+  .tiles { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:16px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .tile .big { font-size:24px; font-weight:600; color:var(--ink); line-height:1.2; }
+  .tile .small { font-size:13px; color:var(--soft); margin-top:4px; }
+
+  .flow { display:grid; grid-template-columns:repeat(3, 1fr); gap:28px 30px; margin-top:12px; counter-reset:step; }
+  .flow .box { position:relative; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .flow .box.last { border:2px solid var(--ink); }
+  .flow .box.failed { border-color:var(--red-edge); }
+  .flow .box .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+  .flow .box .loc { font-size:12px; }
+  .flow .box .label { font-weight:600; color:var(--ink); font-size:14px; margin-top:6px; }
+  .flow .box .num { font-size:12px; color:var(--muted); }
+  .flow .box:not(:last-child):not(:nth-child(3n))::after { content:"→"; position:absolute; right:-23px; top:50%;
+       transform:translateY(-50%); color:var(--muted); font-size:16px; }
+  .flow .step { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+       background:var(--ink); color:#fff; font-size:12px; font-weight:600; flex-shrink:0; }
+  .flow .box .head { display:flex; gap:8px; align-items:center; min-width:0; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .cols .card { margin-top:0; height:100%; }
+
+  .files { columns:3 340px; column-gap:14px; }
+  .files .file { break-inside:avoid; margin-bottom:14px; }
+  .whys { display:grid; grid-template-columns:repeat(auto-fit, minmax(420px, 1fr)); gap:0 14px; align-items:start; }
+  .file { background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .file > .fhead { display:flex; justify-content:space-between; gap:8px; padding:10px 14px; background:#fafafa; border-bottom:1px solid var(--line); }
+  .file > .fhead .loc { font-size:13px; }
+  .file .cite { padding:12px 14px; border-top:1px solid var(--line); }
+  .file .cite:first-of-type { border-top:0; }
+  .file .cite.failed { border-left:3px solid var(--red-edge); }
+  .file .cite .quote { margin:8px 0 6px; }
+  .count { font-size:12px; color:var(--soft); background:#f0f0f0; border-radius:999px; padding:1px 8px; white-space:nowrap; flex-shrink:0; }
+
+  .funnel { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:12px 0 16px; }
+  .funnel .stage { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:14px; position:relative; }
+  .funnel .stage b { display:block; font-size:20px; color:var(--ink); }
+  .funnel .stage.end { background:var(--green-bg); border-color:var(--green-line); }
+  .funnel .stage.end.none { background:var(--amber-bg); border-color:var(--amber-line); }
+
+  .board { display:grid; grid-template-columns:90px 1fr 1fr; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--card); }
+  .board > div { padding:10px; border-top:1px solid var(--line); border-left:1px solid var(--line); }
+  .board > .h { font-size:12px; font-weight:600; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; background:#fafafa; }
+  .board > .h.row { display:flex; align-items:center; }
+  .board > div:nth-child(-n+3) { border-top:0; }
+  .board > div:nth-child(3n+1) { border-left:0; }
+  .board .empty { color:var(--muted); text-align:center; }
+  .mini { border:1px solid var(--line); border-radius:6px; padding:8px 10px; margin-bottom:8px; font-size:14px; }
+  .mini:last-child { margin-bottom:0; }
+  .mini.recommended { border:2px solid var(--ink); }
+  .mini .by { color:var(--muted); font-size:12px; }
+  .mini a { text-decoration:none; color:var(--ink); font-weight:500; }
+  .mini a:hover { text-decoration:underline; }
+  .detail-head { font-size:14px; font-weight:600; color:var(--ink); margin:20px 0 0; }
+
+  @media (max-width: 960px) {
+    .tiles { grid-template-columns:repeat(2, 1fr); }
+  }
+
+  @media (max-width: 760px) {
+    nav .bar { flex-direction:column; align-items:stretch; gap:6px; padding:10px 16px 6px; }
+    nav .who { justify-content:space-between; }
+    nav ul { margin:0; }
+    nav a { padding:4px 10px; font-size:13px; }
+    .whys { grid-template-columns:1fr; }
+    main { padding:24px 16px 64px; }
+    h1 { font-size:21px; }
+    section { scroll-margin-top:100px; }
+    .row { flex-direction:column; gap:8px; }
+    .pills { justify-content:flex-start; }
+    .verdict { padding:16px; }
+    .cols { grid-template-columns:1fr; }
+    .flow { grid-template-columns:1fr; gap:22px; }
+    .flow .box:not(:last-child):not(:nth-child(3n))::after,
+    .flow .box:nth-child(3n):not(:last-child)::after { content:"↓"; position:absolute; right:auto; left:50%; top:auto;
+       bottom:-21px; transform:none; color:var(--muted); font-size:16px; }
+    .funnel { grid-template-columns:1fr 1fr; }
+    .board { grid-template-columns:1fr; }
+    .board > div { border-left:0 !important; }
+    .board > .h.col, .board > .corner { display:none; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="bar">
+    <div class="who"><span class="issue">Issue #476</span><span class="repo">interviewstreet/hiring-agent</span></div>
+    <ul>
+      <li><a href="#verdict">Verdict</a></li>
+<li><a href="#breaks">How it breaks</a></li>      <li><a href="#overview">What's wrong</a></li>
+      <li><a href="#cause">Evidence</a></li>
+      <li><a href="#prs">Pull requests</a></li>
+      <li><a href="#limits">Limits</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main><div class="page">
+    <header>
+      <h1>Issue #476: Bug: identity month_map, unused fetch_profile prefix, and dead stream option</h1>
+      <div class="meta">interviewstreet/hiring-agent · commit e0ece80 · investigation <span class="pill green">verified</span> · 2026-10-11 · investigation cost $0.04</div>
+    </header>
+
+    <section id="verdict" style="margin-top:0">
+      <div class="card verdict none">
+        <h3>No open PR fixes this and merges clean</h3>
+<p class="sub">0 fix it but don't merge clean, 2 fix it partly. See the board below.</p>      </div>
+      <div class="tiles">
+        <div class="tile"><div class="big">8/8</div><div class="small">citations verified in code</div></div>
+        <div class="tile"><div class="big">192 → 11</div><div class="small">open PRs shortlisted by cited lines</div></div>
+        <div class="tile"><div class="big">0 fix</div><div class="small">0 merge clean · 2 partly</div></div>
+        <div class="tile"><div class="big">$0.04</div><div class="small">investigation cost</div></div>
+      </div>
+    </section>
+
+    <section id="breaks">
+      <h2>How it breaks</h2>
+      <p class="intro">The path is the model's reasoning. Each box is a citation checked against the code.</p>
+      <div class="flow">
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">1</span><span class="loc" title="transform.py:449">transform.py:449</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">month_map maps each month to itself</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">2</span><span class="loc" title="transform.py:467">transform.py:467</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">month_map.get lookup returns input unchanged</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">3</span><span class="loc" title="transform.py:486">transform.py:486</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">fetch_profile declares unused prefix</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">4</span><span class="loc" title="transform.py:531">transform.py:531</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">Callers pass discarded prefix</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">5</span><span class="loc" title="models.py:453">models.py:453</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">chat() reads only three option keys</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">6</span><span class="loc" title="models.py:452">models.py:452</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">stream already hardcoded False in body</div>
+        </div>
+        <div class="box last">
+          <div class="top">
+            <span class="head"><span class="step">7</span><span class="loc" title="evaluator.py:66">evaluator.py:66</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">Callers still set stream False in options</div>
+<div class="num">where it shows</div>        </div>
+      </div>
+    </section>
+
+    <section id="overview">
+      <div class="cols">
+        <div class="card" id="wrong">
+          <h2>What's wrong</h2>
+          All three claims are confirmed as dead code, with no functional bug. (1) month_map maps each month abbreviation to itself, so month_map.get(x, x) always returns x. (2) fetch_profile declares a prefix parameter that its body never uses, and every caller passes a string that is discarded.
+          <details><summary>Show full explanation</summary>(3) &#34;stream&#34;: False is put in the options dicts in evaluator.py and pdf.py, but OpenAICompatibleProvider.chat only copies temperature, top_p and reasoning_effort from options, and it hardcodes stream False in the request body. I didn&#39;t open pdf.py beyond the grep hit at line 93. Caveat: evaluator.py nests options inside a larger dict, and I didn&#39;t check whether another provider (for example an Ollama path at models.py:31) reads options[&#34;stream&#34;].</details>
+          <div class="intro" style="margin:10px 0 0">Model confidence: high.</div>
+        </div>
+        <div class="card" id="reproduce">
+          <h2>How to reproduce</h2>
+          <ol class="steps"><li>Read transform.py:449-462 and confirm every key equals its value.</li><li>In a Python shell, import the date-parsing function that contains month_map and run it with &#39;Jan-Mar 2021&#39; and &#39;Jan 2021&#39;. The output is the same with or without the map lookup.</li><li>Read transform.py:486-494 and confirm prefix is never referenced in the body. Then check the callers at transform.py:531-539.</li><li>Read models.py:451-455 and confirm only temperature, top_p and reasoning_effort are read from options, and models.py:452 hardcodes stream False.</li><li>Remove &#39;stream&#39;: False from the options dicts in evaluator.py:66 and pdf.py:93 and confirm the request body is unchanged.</li></ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="cause">
+      <h2>Evidence</h2>
+      <p class="intro">Each citation was checked against the code at e0ece80.</p>
+      <div class="files">
+        <div class="file">
+          <div class="fhead"><span class="loc">transform.py</span><span class="count">4 citations</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 449</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">month_map = {</div>
+            <p class="why">Start of the identity dictionary. Lines 450-461 map each month abbreviation to itself, e.g. &#34;Jan&#34;: &#34;Jan&#34;.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 467</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">start_date = f&#34;{month_map.get(start_month, start_month)} {year}&#34;</div>
+            <p class="why">The lookup returns start_month unchanged, so it has no effect.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 486</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">def fetch_profile(profiles, network_names, prefix):</div>
+            <p class="why">prefix is declared, but the body at lines 487-494 never uses it.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 531</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">github_profile = fetch_profile(basics.profiles, [&#34;github&#34;], &#34;github&#34;)</div>
+            <p class="why">A caller passes a prefix that is discarded.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">models.py</span><span class="count">2 citations</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 453</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">for parameter in (&#34;temperature&#34;, &#34;top_p&#34;, &#34;reasoning_effort&#34;):</div>
+            <p class="why">Only these three options are forwarded, so options[&#39;stream&#39;] is ignored.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 452</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">body: Dict[str, Any] = {&#34;model&#34;: model, &#34;messages&#34;: messages, &#34;stream&#34;: False}</div>
+            <p class="why">stream is already hardcoded to False in the request body.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">evaluator.py</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 66</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">&#34;stream&#34;: False,</div>
+            <p class="why">Dead option, never read by the provider.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">pdf.py</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 93</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">&#34;stream&#34;: False,</div>
+            <p class="why">Same dead option.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="prs">
+      <h2>Pull requests</h2>
+      <p class="intro">Verdicts are judged from the diff, not run. Merge status is a real git check against e0ece80.</p>
+      <div class="funnel">
+<div class="stage"><b>192</b>open PRs</div>        <div class="stage"><b>11</b>change a cited line or mention the issue</div>
+        <div class="stage"><b>2</b>change the cause</div>
+        <div class="stage end none"><b>0</b>fix and merge clean</div>
+      </div>
+<div class="note">#412 and #477 all change the cause. Once one is merged, the others duplicate it.</div>      <div class="board" style="margin-top:12px">
+        <div class="h corner"></div><div class="h col">Merges clean</div><div class="h col">Conflicts or unknown</div>
+        <div class="h row">Fixes</div>
+        <div>
+<div class="empty">—</div>        </div>
+        <div>
+<div class="empty">—</div>        </div>
+        <div class="h row">Partly</div>
+        <div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill amber">Partly</span>
+              <span class="pill green">Merges clean</span>
+            </div>
+            <a href="#pr-412">#412 · fix: handle spaced date ranges and prevent endDate loss in parse_date_range</a> <span class="by">by givemehat</span>
+          </div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill amber">Partly</span>
+              <span class="pill green">Merges clean</span>
+            </div>
+            <a href="#pr-477">#477 · fix: remove identity month_map, dead params, and dead options</a> <span class="by">by Shreesh-Sree</span>
+          </div>
+        </div>
+        <div>
+<div class="empty">—</div>        </div>
+      </div>
+      <div class="detail-head">Why each verdict</div>
+      <div class="whys">
+      <div class="card pr" id="pr-412">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/412">#412 · fix: handle spaced date ranges and prevent endDate loss in parse_date_range</a></span> <span class="by">by givemehat</span></div>
+          <div class="pills">
+            <span class="pill amber">Partly</span>
+            <span class="pill green">Merges clean</span>
+          </div>
+        </div>
+        <p class="why">It deletes the identity month_map by rewriting parse_date_range, but it leaves the unused prefix parameter in fetch_profile and the stream:False options untouched.</p>
+        <div class="because">Shortlisted because: changes transform.py:449, changes transform.py:467, changes transform.py:486</div>
+      </div>
+      <div class="card pr" id="pr-477">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/477">#477 · fix: remove identity month_map, dead params, and dead options</a></span> <span class="by">by Shreesh-Sree</span></div>
+          <div class="pills">
+            <span class="pill amber">Partly</span>
+            <span class="pill green">Merges clean</span>
+          </div>
+        </div>
+        <p class="why">It removes month_map and the stream:False entries in evaluator.py and pdf.py, and drops the prefix parameter. But the diff leaves the dev_profile call as `fetch_profile(..., [&#34;dev community&#34;, &#34;dev&#34;], &#34;dev&#34;)` with the third argument, so that caller would raise a TypeError.</p>
+        <div class="because">Shortlisted because: mentions the issue, changes evaluator.py:66, changes pdf.py:93, changes transform.py:449, changes transform.py:467, changes transform.py:486, changes transform.py:531</div>
+      </div>
+      </div>
+      <details class="fold">
+        <summary><span>9 PRs that don't fix it</span><span class="show">Show</span></summary>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/19">#19 · fix: basics section in resumecache JSON being null (#16)</a></span> <span class="by">by SharanyaR1</span></div>
+          <p class="why">It only adds a text_content message in pdf.py and leaves the dead stream option, month_map and prefix in place.</p>
+          <div class="because">Shortlisted because: changes pdf.py:93</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/22">#22 · fix: Resolve work section which is null in cache json (#20)</a></span> <span class="by">by SharanyaR1</span></div>
+          <p class="why">Its pdf.py change adds a text_content message, and the work.jinja change is a prompt edit. It does not remove the dead stream option, month_map or prefix.</p>
+          <div class="because">Shortlisted because: changes pdf.py:93</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/55">#55 · Optimize resume parsing via sectional extraction and context snippets…</a></span> <span class="by">by sadiya595</span></div>
+          <p class="why">It restructures pdf.py into section snippets with retries and keeps `&#34;stream&#34;: False` in the options. It does not touch month_map or prefix.</p>
+          <div class="because">Shortlisted because: changes pdf.py:93</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/167">#167 · [Feature] JD-Augmented Scoring and Multi-Candidate Batch Processing</a></span> <span class="by">by 0ameyasr</span></div>
+          <p class="why">It adds JD scoring and moves `&#34;stream&#34;: False` into a new helper, and leaves fetch_profile&#39;s prefix and month_map alone.</p>
+          <div class="because">Shortlisted because: changes evaluator.py:66</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/178">#178 · Integrate Codeforces profile scoring and bonus points</a></span> <span class="by">by pranjal1codes</span></div>
+          <p class="why">It adds Codeforces and token-usage features, and it even adds new fetch_profile calls that pass the unused prefix. It leaves the dead stream option and month_map in place.</p>
+          <div class="because">Shortlisted because: changes transform.py:531</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/368">#368 · Add a Claude Agent SDK provider that uses your local Claude Code login</a></span> <span class="by">by sstockdev</span></div>
+          <p class="why">It adds a Claude Agent provider and an evaluator retry loop that still sets `&#34;stream&#34;: False`. It does not touch month_map or prefix.</p>
+          <div class="because">Shortlisted because: changes evaluator.py:66</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/377">#377 · fix: drop deprecated sampling params and response_format from Anthropic provider config</a></span> <span class="by">by ayo0la</span></div>
+          <p class="why">It reworks the temperature/top_p options in evaluator.py and pdf.py but keeps `&#34;stream&#34;: False`. It does not touch month_map or fetch_profile&#39;s prefix.</p>
+          <div class="because">Shortlisted because: changes evaluator.py:66, changes pdf.py:93</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/415">#415 · feat: add AWS Bedrock provider transport</a></span> <span class="by">by sairam0424</span></div>
+          <p class="why">It changes the options dicts to `**model_params` but keeps `&#34;stream&#34;: False`, and leaves month_map and the prefix parameter alone.</p>
+          <div class="because">Shortlisted because: changes evaluator.py:66, changes pdf.py:93</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/451">#451 · Fix Anthropic provider: strict-mode schema and unsupported params</a></span> <span class="by">by ihdomenech-code</span></div>
+          <p class="why">It changes the options dicts to `**model_params` but keeps `&#34;stream&#34;: False`, and does not touch month_map or prefix.</p>
+          <div class="because">Shortlisted because: changes evaluator.py:66, changes pdf.py:93</div>
+        </div>
+      </details>
+    </section>
+
+    <section id="limits" class="limits">
+      <div class="card">
+        <h2>What this packet does not prove</h2>
+        <ul>
+          <li>Citations are checked against the code. The explanation that links them, the order of the chain, and any claim about outside systems (APIs, libraries) are the model's reasoning and are not checked.</li>
+          <li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+          <li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers have drifted, is missed, so this is not proof that no other PR fixes it.</li>
+        </ul>
+      </div>
+    </section>
+</div></main>
+<script>
+  // highlight the section currently on screen in the navigation
+  const links = [...document.querySelectorAll("nav a")];
+  const seen = new IntersectionObserver(entries => {
+    for (const entry of entries) if (entry.isIntersecting) {
+      links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id));
+    }
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  document.querySelectorAll("main section").forEach(s => seen.observe(s));
+</script>
+</body>
+</html>

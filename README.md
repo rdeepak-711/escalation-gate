@@ -2,7 +2,7 @@
 
 Give it a GitHub repo and one issue (or a symptom in plain words). It produces an **escalation packet**: the root cause with every code citation checked, steps to reproduce, and which open pull requests already fix it, each with a real merge check.
 
-**Live demo:** [escalation-gate-rdeepak.vercel.app](https://escalation-gate-rdeepak.vercel.app) (with a real packet for hiring-agent #424).
+**Live demo:** [escalation-gate-rdeepak.vercel.app](https://escalation-gate-rdeepak.vercel.app): real packets, a board per repo, and two short videos (what it is, and a live run).
 
 It is built for the moment a bug report lands on a busy repo: an engineer wants to know *is this real, where is it, and has someone already fixed it?* without reading 200 open PRs.
 
@@ -14,6 +14,8 @@ On `interviewstreet/hiring-agent` issue #424 (scores swing between runs), one co
 - **Recommended:** merge #425, which was judged to fix both halves from its diff and merges clean.
 - **Also fixes it:** #415, but it conflicts and the fix is buried inside an unrelated feature PR. **Partly fixes it:** #242 and #462.
 - 192 open PRs were cut to 27 by cited lines, then judged, for about $0.40 in total on Sonnet.
+
+It also found a bug nobody had reported: `github.py:239` looks up contributors with the candidate as the repo owner, so team and org repos score as solo projects with zero commits. Filed upstream as [issue #479](https://github.com/interviewstreet/hiring-agent/issues/479) with the fix in [PR #480](https://github.com/interviewstreet/hiring-agent/pull/480).
 
 I had reviewed the same issue by hand before building the tool. The tool disagreed with my review on #415, and when I checked the diff, the tool was right. It also found #242, which I had missed.
 
@@ -52,6 +54,8 @@ open out/packet-<id>.html
 ```
 
 To see every open issue with its status (⬜ not investigated, ✅ verified, ⚠️ needs a human), run `uv run python -m gate.cli --repo owner/name --list`. It prints a table and writes `site/<name>/index.html`, a board that links each investigated issue to its packet. Every `--issue` run updates the board.
+
+It uses the Postgres database at `DATABASE_URL` (default `postgresql://localhost/escalation_gate`); set it to use another one. Cost is about $0.03–0.45 per issue on Sonnet, most of it the PR judging step, which is skipped when no open PR touches the cited lines.
 
 The first run on a repo clones it into `vendor/` and collects its open issues and PRs (a few minutes for a busy repo). Add `--refresh` to collect again. `--model opus` uses a stronger model for both Claude steps (about 5× the cost).
 

@@ -85,7 +85,7 @@
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="/">escalation-gate</a>
-  <nav><a href="#boards">Boards</a><a href="#how">How it works</a><a href="#proof">What's proven</a><a href="https://github.com/rdeepak-711/escalation-gate">GitHub</a></nav>
+  <nav><a href="#watch">Watch</a><a href="#boards">Boards</a><a href="#how">How it works</a><a href="#proof">What's proven</a><a href="https://github.com/rdeepak-711/escalation-gate">GitHub</a></nav>
 </div></header>
 
 <main class="wrap">
@@ -113,6 +113,21 @@
     </div>
   </section>
 
+  <section id="watch" style="padding-top:8px">
+    <h2>Watch it</h2>
+    <p class="lead">Two short videos: what it is, and a live run on a real HackerRank bug. Narration is synthetic (Kokoro TTS); every screen is from a real run.</p>
+    <div class="grid2">
+      <div class="card" style="padding:0; overflow:hidden">
+        <video controls preload="metadata" playsinline poster="/video/explainer.jpg" style="width:100%; display:block"><source src="/video/explainer.mp4" type="video/mp4"></video>
+        <div style="padding:14px 18px"><strong>What it is</strong> <span class="small">· 1:37</span></div>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden">
+        <video controls preload="metadata" playsinline poster="/video/live-test.jpg" style="width:100%; display:block"><source src="/video/live-test.mp4" type="video/mp4"></video>
+        <div style="padding:14px 18px"><strong>Live test on hiring-agent #476</strong> <span class="small">· 1:28</span></div>
+      </div>
+    </div>
+  </section>
+
   <section class="story">
     <h2>It caught a mistake in my own review.</h2>
     <p class="lead">Before building the tool, I reviewed issue #424 by hand: 30 scoring runs, the root cause traced through four files, and all 191 open PRs checked against it. That review took about 1.5 hours and became the tool's test target.</p>
@@ -125,6 +140,15 @@
         <p><strong>It also found #242</strong>, a partial fix that my review missed.</p>
         <p>Both PRs touch the exact lines where the bug lives, which is why the shortlist caught them. The verdicts are labelled as judged from the diff, because nothing was run.</p>
       </div>
+    </div>
+  </section>
+
+  <section id="upstream">
+    <h2>Found with it, fixed upstream</h2>
+    <p class="lead">Investigating a second hiring-agent bug, it cited <code>github.py:239</code>: contributor counts are looked up with the candidate as the repo owner, so team and org repos score as solo projects with zero commits. On one public profile that mislabels 25 of 99 repos. I filed it and sent the two-line fix.</p>
+    <div class="grid2">
+      <a class="card board" href="https://github.com/interviewstreet/hiring-agent/issues/479"><div class="small">interviewstreet/hiring-agent</div><div class="big" style="font-size:22px; margin-top:4px">Issue #479</div><div class="small">the bug, a 4-line reproduction, before and after →</div></a>
+      <a class="card board" href="https://github.com/interviewstreet/hiring-agent/pull/480"><div class="small">interviewstreet/hiring-agent</div><div class="big" style="font-size:22px; margin-top:4px">Pull request #480</div><div class="small">fixes #479 · 2 lines in github.py →</div></a>
     </div>
   </section>
 
