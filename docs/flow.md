@@ -38,6 +38,7 @@ python -m gate.packet --investigation ID                                        
 
 ## Step by step, with the real functions
 
+0. **Board** — `gate.cli --list` → `gate/board.py`: `rows()` joins every open issue to its latest non-hidden investigation (`investigations.hidden` keeps known-bad runs off it), `result()` summarises its verdicts using the merge status `packet.load()` stored in `pr_verdicts.merge`, `kind()` guesses bug/feature from labels and title. `write()` renders `gate/templates/board.html.j2` to `site/<name>/index.html` and copies each packet to `site/<name>/issues/<n>.html`. Every `--issue` run ends with `board.write()`.
 0. **One command** — `gate/cli.py` `main()`: clone `vendor/<name>` if missing (`clone()`, `--filter=blob:none`, full history for merge checks); `collect()` if the repo has no PRs stored or `--refresh`; `investigate.run()`; stop if the status is `timeout`/`error`; `candidates.run()`; `packet.write()`; print the HTML path. Each stage's `main()` is now a thin wrapper around the same `run()`/`write()` function.
 
 1. **Collect** — `gate/collect.py` `collect(repo)`: `gh issue list` → upsert `issues`, delete closed; `gh pr list` → upsert `prs`, delete closed (cascade removes their `pr_files`); per PR `gh api …/pulls/N/files` → replace its `pr_files` rows; commit per PR.

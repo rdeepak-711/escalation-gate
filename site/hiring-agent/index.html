@@ -1,0 +1,1731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>interviewstreet/hiring-agent · issue board · escalation-gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373; --line:#e5e5e5;
+    --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0; --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
+    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif; --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 var(--sans); }
+  a { color:var(--ink); }
+  .bar { background:#fff; border-bottom:1px solid var(--line); }
+  .wrap { max-width:1200px; margin:0 auto; padding:0 32px; }
+  .bar .wrap { display:flex; justify-content:space-between; align-items:center; height:52px; }
+  .brand { font:600 14px var(--mono); text-decoration:none; }
+  .bar a.gh { font-size:14px; color:var(--soft); text-decoration:none; }
+  h1 { font-size:28px; color:var(--ink); margin:32px 0 6px; letter-spacing:-.01em; overflow-wrap:anywhere; }
+  .sub { color:var(--soft); margin:0 0 22px; font-size:14px; }
+  .tiles { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:22px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .tile b { display:block; font-size:24px; color:var(--ink); line-height:1.2; }
+  .tile span { font-size:13px; color:var(--soft); }
+  .tile.ready { background:var(--green-bg); border-color:var(--green-line); }
+  .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .filters button { font:500 13px var(--sans); background:#fff; border:1px solid var(--line); color:var(--soft);
+                    padding:5px 12px; border-radius:999px; cursor:pointer; }
+  .filters button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  th, td { text-align:left; padding:10px 12px; border-top:1px solid var(--line); vertical-align:top; font-size:14px; }
+  th { background:#f5f5f5; border-top:0; font-weight:600; color:var(--ink); font-size:13px; }
+  td.n { font:13px var(--mono); white-space:nowrap; }
+  td.s { font-size:16px; width:36px; text-align:center; }
+  td.title { overflow-wrap:anywhere; }
+  .kind { font-size:12px; padding:1px 8px; border-radius:999px; background:#f0f0f0; color:var(--soft); white-space:nowrap; }
+  .kind.bug { background:var(--amber-bg); color:var(--amber); }
+  .res a { font-weight:500; }
+  .res .ready { color:var(--green); font-weight:600; }
+  .muted { color:var(--muted); }
+  .note { color:var(--soft); font-size:13px; margin:18px 0 48px; }
+  @media (max-width: 760px) {
+    .wrap { padding:0 16px; }
+    .tiles { grid-template-columns:repeat(2,1fr); }
+    th.k, td.k { display:none; }
+    td.res { display:block; padding-top:0; border-top:0; }
+    tr { display:grid; grid-template-columns:36px 64px 1fr; }
+    tr > td.res { grid-column:1 / -1; padding-left:48px; }
+    tr > td.res.empty { display:none; }
+    thead { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap">
+  <a class="brand" href="../">escalation-gate</a>
+  <a class="gh" href="https://github.com/interviewstreet/hiring-agent/issues">interviewstreet/hiring-agent on GitHub ↗</a>
+</div></div>
+<main class="wrap">
+  <h1>interviewstreet/hiring-agent</h1>
+  <p class="sub">Every open issue, and what escalation-gate found for the ones it investigated. Updated 2026-10-11.</p>
+
+  <div class="tiles">
+    <div class="tile"><b>162</b><span>open issues</span></div>
+    <div class="tile"><b>71</b><span>look like bug reports</span></div>
+    <div class="tile"><b>192</b><span>open pull requests</span></div>
+    <div class="tile"><b>2</b><span>investigated</span></div>
+    <div class="tile ready"><b>1</b><span>have a PR that fixes it and merges clean</span></div>
+  </div>
+
+  <div class="filters">
+    <button data-f="all">All</button>
+    <button data-f="bug" class="on">Bugs</button>
+    <button data-f="done">Investigated</button>
+    <button data-f="todo">Not yet</button>
+  </div>
+
+  <table>
+    <thead><tr><th></th><th>Issue</th><th class="k">Kind</th><th>Title</th><th>Result</th></tr></thead>
+    <tbody>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/476">#476</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: identity month_map, unused fetch_profile prefix, and dead stream option</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/474">#474</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">chore: unused imports, debugger leak (import pdb), and dead config across codebase</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/472">#472</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: blog scoring pipeline is wired but never triggered (blog_data never passed to evaluator)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/470">#470</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: optional evidence trace with source references and quote checks</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/468">#468</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: transform_achievements() drops the date emitted by the awards extractor</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/459">#459</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: GitHub enrichment is skipped when the resume writes the GitHub domain with capitals (GitHub.com/user)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/457">#457</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Gemini unusable with new API keys: retired models, hidden errors, quota retry loop</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/452">#452</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">GitHub bio/repo description is unsanitized, injectable into the resume-scoring LLM prompt</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/448">#448</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: project highlights are extracted by the LLM but discarded in transform_projects()</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/436">#436</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Minor: success response logged at ERROR, github.py uses pdf logger, &#39;top 5&#39; message while selecting 7</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/435">#435</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: provider does not handle null message content / finish_reason, crashing with &#39;NoneType&#39; object has no attribute &#39;strip&#39;</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/434">#434</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: GitHub rate-limit handling sleeps up to 1h but never retries the failed request</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/433">#433</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: GitHub project-selection exception fallback uses unfiltered repos (0 author commits) and drops commit counts</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="yes">
+      <td class="s" title="verified">✅</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/432">#432</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: role.json min_final_score / max_final_score are loaded but never applied to the final score</td>
+      <td class="res">
+        
+          <a href="issues/432.html">partly: #292, #443 →</a>
+        
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/431">#431</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: resume/GitHub cache keyed only on PDF basename, so two different resume.pdf files share cached data</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/430">#430</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: CSV export rows shift into wrong columns when basics is missing (46 vs 31 columns under one header)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/429">#429</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: project technologies are extracted but never included in the text sent to the evaluator</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/428">#428</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: one profile with url=null (or missing name) discards the entire basics section, silently disabling GitHub enrichment</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/427">#427</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: overall score is capped using the LLM-returned max instead of role.json weights (e.g. 105/165 instead of 60/100)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/426">#426</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: prompt templates fail to load unless score.py is run from the repo root (template_dir is CWD-relative)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="yes">
+      <td class="s" title="verified">✅</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/424">#424</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">GitHub enrichment: project_type and contributor counts never reach the evaluator</td>
+      <td class="res">
+        
+          <a href="issues/424.html"><span class="ready">merge #425</span> →</a>
+        
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/409">#409</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: &#34;Open Source Contributions&#34; resume section is silently dropped, but open_source is the highest-weighted scoring category (35/100)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/404">#404</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Fix: extracted Github project live demo URLs not being passed to LLM</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/403">#403</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">providers.json num_ctx setting has no effect on Ollama and causes empty responses on CPU setups</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/400">#400</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: designed / multi-column resume layouts (Canva, etc.) silently drop whole sections during PDF to Markdown extraction</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/398">#398</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Docs: add reproducible uv setup using pinned Python 3.11.13</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/393">#393</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: Score cover letters against a role&#39;s job description</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/391">#391</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add documentation and ease of setup for Anthropic endpoint</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/388">#388</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">fix: handle spaced date ranges and prevent endDate loss in parse_date_range</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/386">#386</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">fix: handle HTTP-date in Retry-After header during 429 retries</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/383">#383</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Generate a revamped resume from the extracted data after scoring</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/380">#380</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add explicit Ollama support for gemma4:12b</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/378">#378</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: no Gemini model in providers.json is usable on a new API key (2.5-flash / 2.5-flash-lite return 404 &#34;no longer available to new users&#34;)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/374">#374</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: condensed &#34;Also: ...&#34; resume lines silently drop extra work/project entries</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/373">#373</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: shipped Anthropic provider config in providers.json is incompatible with real Claude models</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/372">#372</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: requirements.txt pins nonexistent versions of requests and python-dotenv, breaking fresh installs</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/359">#359</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Docs: README still describes pre #298 provider set up, removed provider classes, and incorrect config</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/356">#356</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: .env&#39;s DEFAULT_MODEL silently ignored due to load_dotenv() import-order in config.py</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/349">#349</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Gemini provider crashes with a Pydantic validation error on deductions.reasons</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/345">#345</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Fenced JSON parsing fails after think blocks</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/343">#343</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: Add support for GitHub Copilot SDK as LLM Provider</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/342">#342</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">GeminiProvider sends &#34;system&#34; messages as model turns instead of using system_instruction</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/337">#337</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Performance: GitHub API rate limit exhaustion and severe bottleneck during repository analysis</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/335">#335</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: extract_github_username keeps URL fragments and trailing punctuation, breaking GitHub enrichment</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/331">#331</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">AI エージェント</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/327">#327</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">github_project_selection prompt has contradictory rules on low-commit-count contributions</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/321">#321</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">feat: add llama.cpp and NVIDIA NIM provider support</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/315">#315</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">PDF parsing issue and cannot access project active links</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/312">#312</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: extract_json_from_response fails to strip bare ``` code fences (no &#39;json&#39; tag)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/310">#310</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">feat: add Z.AI (GLM) provider support</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/309">#309</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Dribbble support</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/308">#308</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Create a golden dataset for evaluation of the agent’s performance</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/300">#300</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Resume evaluation crashes with ValidationError when LLM returns negative deductions total</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/296">#296</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">feat: Add OpenCode API provider support</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/295">#295</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[Feature] Add Z.ai (GLM) LLM provider</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/288">#288</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Profile username not extracted when network is already set (LinkedIn shows username: null)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/284">#284</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug] Gemini provider aborts extraction on transient 504 DeadlineExceeded; only 429 is retried</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/278">#278</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Ollama models fail to reliably extract resume sections (skills, projects, etc.) that work correctly with Gemini</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/276">#276</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Web UI to track resumes and get better insights</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/273">#273</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Security | Hidden PDF text poisons resume extraction and inflates hiring scores</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/272">#272</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Add Docker Configuration for Local Development</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/271">#271</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Backend projects are penalized for missing live demos</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/269">#269</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">GitHub project selector includes repositories below author commit threshold</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/267">#267</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Logger INFO messages are incorrectly written to stderr</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/265">#265</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Unicode emoji in print/log statements crash on Windows (cp1252)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/263">#263</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: support Ollama Cloud as a third LLM backend</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/262">#262</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">chore: Clean up unused standard library imports</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/259">#259</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: Add bullet point quality analysis to resume evaluation</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/258">#258</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Invalid model in .env produces confusing Ollama 404 error instead of clear warning</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/252">#252</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: Skill Evidence Trace for Every Evaluation Score</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/246">#246</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: explain why each section got its score and how to improve it (rubric-based, no extra LLM call)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/240">#240</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">LLM hallucinates bonus points and open source contributions not present in resume or GitHub data</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/228">#228</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Open Source score ignores merged PRs to external repos (classifier only inspects own repos)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/226">#226</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Extraction aborts and discards all sections when one optional section returns empty</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/223">#223</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Section extraction aborts silently when an LLM returns an empty object {} for a section</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/220">#220</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[Improvement] Update Gemini model registry in prompt.py — missing some Gemini 3.x and Gemma 4 models</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/217">#217</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Repo contributor count is wrong: /contributors response is paginated but only first page is read</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/216">#216</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">GitHub stats columns in exported CSV are always 0/empty (wrong dict level)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/209">#209</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Blog post data is excluded from evaluation due to missing fetch logic in main()</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/208">#208</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">feat: add OpenAI API provider support</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/204">#204</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add Claude/Gemini CLI and Anthropic Claude API as LLM backends</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/202">#202</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Section extraction silently returns empty {} on small Ollama models due to JSON-schema format constraint</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/196">#196</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug]:Application Crashes When LLM Evaluation Fails</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/194">#194</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Newer Gemini models (3.5-flash, 3.1-flash-lite) silently fall back to Ollama provider</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/191">#191</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature: Support Coding Profile Enrichment (LeetCode, Codeforces, etc.)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/189">#189</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[feature] Add support to configure role and organization through .env parameters</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/188">#188</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[improvement] add latest gemini models to ModelProviderMapping</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/187">#187</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[improvement] use latest patch version for python 3.11</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/186">#186</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug] Agent fails to complete response when Gemini Free Tier RPM limit is exceeded</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/185">#185</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug] Cache being saved and reused in case of error from model provider</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/183">#183</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add Profile Authenticity / Credibility Assessment</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/175">#175</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Proposal: Extend Evaluation Beyond GitHub (LeetCode, HackerRank, CodeForces, CodeChef, etc)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/172">#172</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title"> Feature: Add LeetCode Enrichment and LLM-Based Problem-Solving Evaluation</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/166">#166</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[Feature Request] JD-Augmented Scoring and Multi-Candidate Batch Processing</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/162">#162</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Project details of forked repository are not accounted for and skipped from all_repositories because of false positive of forks_count&lt;5</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/160">#160</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add comprehensive test suite for improved code reliability</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/158">#158</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">feat: Added role fit scoring</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/156">#156</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feat: Support for Multiple LLM Providers</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/155">#155</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Forked repository stats are sourced from the user&#39;s fork instead of the upstream parent repository</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/153">#153</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feat: Add gitlab project extraction</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/152">#152</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Extract clickable URLs from PDF text</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/149">#149</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Fix fork contribution detection in GitHub analysis</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/144">#144</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add batch processing support for multiple resume evaluation</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/139">#139</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Add Structured Output Support for Gemini API</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/137">#137</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Improve PDF Parser Robustness for Diverse Resume Layouts and Styles</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/135">#135</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Resume data showing as null due to stale cache files</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/131">#131</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Issue: Inaccurate Open Source Contribution Detection</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/126">#126</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Add support for .docx resume files</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/119">#119</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug in fetch_repo_contributors function – unreachable code and incorrect return</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/118">#118</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Performance Bottleneck : High Latency and Slow Performance</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/116">#116</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">&#39;charmap&#39; codec can&#39;t encode characters when caching GitHub data</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/114">#114</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[Feature] Profiler for testing performance</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/112">#112</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">[Feature] API endpoint for testing from different devices</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/110">#110</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">[Security]: Data Validation Bypass – Missing Input Sanitization in URL Processing</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/108">#108</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug]: Race condition in concurrent cache file access</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/104">#104</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Missing error handling for None response in evaluator.py causing crashes</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/102">#102</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug] : Memory leak in PDF processing due to unclosed PyMuPDF document objects</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/100">#100</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Invalid or incomplete PDFs being sent to LLM for evaluation</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/98">#98</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug] Variance in Resume Scores</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/95">#95</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug] &#34;achievements&#34; from markdown were not picked up by LLM</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/94">#94</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">[Bug]: pymupdf_rag.py was missing an entry function for development</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/93">#93</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">[CI/CD] feat: Add CI/CD workflow for Code Quality</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/92">#92</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">[Infra] Add Continuous Integration and Pre-Commit Setup</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/90">#90</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">code-formatting: import statements are not PEP 8 compliant</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/86">#86</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">fix: (NameError) Undefined &#39;response&#39; variable in github.py</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/85">#85</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Expanded Social Profile Enrichment for Candidate Evaluation (adding twitter, blogs on mediums etc.)</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/82">#82</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Extraction and evaluation of open source contributions is broken</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/81">#81</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature : Add Multi-format Resume Support</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/80">#80</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Resume Comparison System</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/78">#78</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feat : Adding Support for GROQ provider</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/77">#77</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: LLM_PROVIDER IS not used at all</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/76">#76</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Feature Request: Add Scholarship/Mentorship Scoring as a Separate Category</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/73">#73</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">✨Feature: Add configuration file support for customizable settings</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/71">#71</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add input validation for PDF files in extract_text_from_pdf function</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/68">#68</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Issue: Missing Error Handling for JSON Parsing in extract_json_from_response</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/65">#65</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Add extraction support for &#39;certificates&#39; and &#39;volunteer experience&#39; resume sections</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/64">#64</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Blog Data Evaluation Feature Incomplete: Missing Blog Content Fetching and Resume URL Extraction</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/61">#61</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">GitHub Profile Data Not Exporting to CSV</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/57">#57</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Enhance Output Formatting and Readability</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/56">#56</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Minor: Repetitive use of Description key in project object formation while fetching GitHub repos</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/52">#52</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Enhancement: Exclude bot accounts from contributor count before project classification</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/46">#46</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Code after return statement never runs in `fetch_repo_contributors`</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/44">#44</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Fix Undefined Variable in GitHub API Error Handling</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/43">#43</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Improve skills extraction to prioritize relevant skills instead of first 10 alphabetical skills</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/40">#40</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Optimize Resume Parsing via Sectional Extraction and Context Snippets</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/37">#37</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Issue : Reference to Undefined Variable &#34;response&#34; in fetch_all_github_repos()</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/36">#36</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">UnicodeEncodeError and JSONDecodeError in score.py when running on Windows</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/35">#35</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Issue: Non-deterministic scoring with Gemini Pro models even at temperature 0</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/33">#33</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Robust cache file handling for encoding errors.</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/32">#32</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">feat: Add support for certifications and publications sections in resume parsing</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/31">#31</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Could we add other Open source programs as well</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/30">#30</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Enhancement: Advanced GitHub Analytics for Comprehensive Developer Assessment</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/27">#27</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Migrate to Async/Await for LLM API Calls</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/24">#24</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Bug: Negative deduction total can crash resume evaluation with Pydantic validation error</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/20">#20</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Work section in resumecache_&lt;resume_name&gt;.json is always null</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/18">#18</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Inconsistent capturing of Work experience and what model is being used  </td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/16">#16</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Basics section in resumecache_&lt;resume_name&gt;.json is always null</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/15">#15</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">feat: Automate template discovery in TemplateManager</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/14">#14</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">CSV export missing GitHub data due to incorrect data structure access</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="feature" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/12">#12</a></td>
+      <td class="k"><span class="kind feature">feature</span></td>
+      <td class="title">Enhancement: Improve Open Source Detection with PR Tracking and License-Based Classification</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="bug" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/9">#9</a></td>
+      <td class="k"><span class="kind bug">bug</span></td>
+      <td class="title">Fix GitHub API reliability: encoding issues, retry logic, rate limit handling, and undefined variables</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    <tr data-kind="other" data-done="no">
+      <td class="s" title="not investigated">⬜</td>
+      <td class="n"><a href="https://github.com/interviewstreet/hiring-agent/issues/8">#8</a></td>
+      <td class="k"><span class="kind other">other</span></td>
+      <td class="title">Update deprecated `google-generativeai` dependency</td>
+      <td class="res empty">
+        <span class="muted">—</span>
+      </td>
+    </tr>
+    
+    </tbody>
+  </table>
+
+  <p class="note">⬜ not investigated · ✅ citations verified · ⚠️ a citation failed twice, needs a human · ✗ timed out or errored.
+  "Kind" is a guess from the title. Each result is judged from the diffs, not run; open a packet for the evidence and its limits.</p>
+</main>
+<script>
+  const buttons = document.querySelectorAll(".filters button");
+  const rows = document.querySelectorAll("tbody tr");
+  function apply(f) {
+    buttons.forEach(b => b.classList.toggle("on", b.dataset.f === f));
+    rows.forEach(r => {
+      const show = f === "all" || (f === "bug" && r.dataset.kind === "bug") ||
+                   (f === "done" && r.dataset.done === "yes") || (f === "todo" && r.dataset.done === "no");
+      r.style.display = show ? "" : "none";
+    });
+  }
+  buttons.forEach(b => b.addEventListener("click", () => apply(b.dataset.f)));
+  apply("bug");
+</script>
+</body>
+</html>

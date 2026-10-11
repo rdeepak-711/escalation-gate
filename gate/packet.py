@@ -164,6 +164,9 @@ def load(conn, inv_id: int, repo_dir: Path) -> dict:
             v["merge"] = None
         else:
             v["merge"] = merge_status(repo_dir, f"refs/gate/pr/{v['pr']}") if fetched else "unknown"
+            conn.execute("UPDATE pr_verdicts SET merge = %s WHERE investigation_id = %s AND pr = %s",
+                         (v["merge"], inv_id, v["pr"]))
+    conn.commit()
 
     open_prs = conn.execute("SELECT count(*) FROM prs WHERE repo = %s", (repo,)).fetchone()[0]
     commit = subprocess.run(["git", "-C", str(repo_dir), "rev-parse", "--short", "HEAD"],

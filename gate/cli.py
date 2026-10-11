@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from gate import candidates, investigate, packet
+from gate import board, candidates, investigate, packet
 from gate.collect import collect
 from gate.db import connect
 from gate.investigate import ROOT
@@ -24,6 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument("--issue", type=int)
     target.add_argument("--symptom")
+    target.add_argument("--list", action="store_true", help="show every open issue with its status, and write the board page")
     parser.add_argument("--model", default="sonnet", help="Claude model for both Claude steps (default: sonnet)")
     parser.add_argument("--refresh", action="store_true", help="collect issues and PRs again even if already stored")
     args = parser.parse_args(argv)
@@ -38,6 +39,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"collecting open issues and PRs of {args.repo} (a few minutes for a busy repo)")
         collect(args.repo)
 
+    if args.list:
+        print(board.render_table(board.rows(conn, args.repo)))
+        print(f"\nboard: open {board.write(conn, args.repo)}")
+        conn.close()
+        return 0
+
     inv_id, outcome = investigate.run(conn, args.repo, args.issue, args.symptom, args.model)
     if outcome["status"] not in ("verified", "needs_human"):
         conn.close()
@@ -46,8 +53,9 @@ def main(argv: list[str] | None = None) -> int:
 
     candidates.run(conn, inv_id, args.model)
     html = packet.write(conn, inv_id)
+    page = board.write(conn, args.repo)
     conn.close()
-    print(f"\npacket ready: open {html}")
+    print(f"\npacket ready: open {html}\nboard updated: open {page}")
     return 0 if outcome["status"] == "verified" else 1
 
 

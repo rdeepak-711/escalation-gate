@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ repo }} · issue board · escalation-gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373; --line:#e5e5e5;
+    --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0; --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
+    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif; --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 var(--sans); }
+  a { color:var(--ink); }
+  .bar { background:#fff; border-bottom:1px solid var(--line); }
+  .wrap { max-width:1200px; margin:0 auto; padding:0 32px; }
+  .bar .wrap { display:flex; justify-content:space-between; align-items:center; height:52px; }
+  .brand { font:600 14px var(--mono); text-decoration:none; }
+  .bar a.gh { font-size:14px; color:var(--soft); text-decoration:none; }
+  h1 { font-size:28px; color:var(--ink); margin:32px 0 6px; letter-spacing:-.01em; overflow-wrap:anywhere; }
+  .sub { color:var(--soft); margin:0 0 22px; font-size:14px; }
+  .tiles { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:22px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .tile b { display:block; font-size:24px; color:var(--ink); line-height:1.2; }
+  .tile span { font-size:13px; color:var(--soft); }
+  .tile.ready { background:var(--green-bg); border-color:var(--green-line); }
+  .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .filters button { font:500 13px var(--sans); background:#fff; border:1px solid var(--line); color:var(--soft);
+                    padding:5px 12px; border-radius:999px; cursor:pointer; }
+  .filters button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  th, td { text-align:left; padding:10px 12px; border-top:1px solid var(--line); vertical-align:top; font-size:14px; }
+  th { background:#f5f5f5; border-top:0; font-weight:600; color:var(--ink); font-size:13px; }
+  td.n { font:13px var(--mono); white-space:nowrap; }
+  td.s { font-size:16px; width:36px; text-align:center; }
+  td.title { overflow-wrap:anywhere; }
+  .kind { font-size:12px; padding:1px 8px; border-radius:999px; background:#f0f0f0; color:var(--soft); white-space:nowrap; }
+  .kind.bug { background:var(--amber-bg); color:var(--amber); }
+  .res a { font-weight:500; }
+  .res .ready { color:var(--green); font-weight:600; }
+  .muted { color:var(--muted); }
+  .note { color:var(--soft); font-size:13px; margin:18px 0 48px; }
+  @media (max-width: 760px) {
+    .wrap { padding:0 16px; }
+    .tiles { grid-template-columns:repeat(2,1fr); }
+    th.k, td.k { display:none; }
+    td.res { display:block; padding-top:0; border-top:0; }
+    tr { display:grid; grid-template-columns:36px 64px 1fr; }
+    tr > td.res { grid-column:1 / -1; padding-left:48px; }
+    tr > td.res.empty { display:none; }
+    thead { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap">
+  <a class="brand" href="../">escalation-gate</a>
+  <a class="gh" href="https://github.com/{{ repo }}/issues">{{ repo }} on GitHub ↗</a>
+</div></div>
+<main class="wrap">
+  <h1>{{ repo }}</h1>
+  <p class="sub">Every open issue, and what escalation-gate found for the ones it investigated. Updated {{ generated }}.</p>
+
+  <div class="tiles">
+    <div class="tile"><b>{{ counts.open }}</b><span>open issues</span></div>
+    <div class="tile"><b>{{ counts.bugs }}</b><span>look like bug reports</span></div>
+    {% if open_prs is not none %}<div class="tile"><b>{{ open_prs }}</b><span>open pull requests</span></div>{% endif %}
+    <div class="tile"><b>{{ counts.done }}</b><span>investigated</span></div>
+    <div class="tile ready"><b>{{ counts.ready }}</b><span>have a PR that fixes it and merges clean</span></div>
+  </div>
+
+  <div class="filters">
+    <button data-f="all">All</button>
+    <button data-f="bug" class="on">Bugs</button>
+    <button data-f="done">Investigated</button>
+    <button data-f="todo">Not yet</button>
+  </div>
+
+  <table>
+    <thead><tr><th></th><th>Issue</th><th class="k">Kind</th><th>Title</th><th>Result</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr data-kind="{{ r.kind }}" data-done="{{ 'yes' if r.status else 'no' }}">
+      <td class="s" title="{{ r.status or 'not investigated' }}">{{ symbol[r.status] }}</td>
+      <td class="n"><a href="https://github.com/{{ repo }}/issues/{{ r.number }}">#{{ r.number }}</a></td>
+      <td class="k"><span class="kind {{ r.kind }}">{{ r.kind }}</span></td>
+      <td class="title">{{ r.title }}</td>
+      <td class="res{{ '' if r.status else ' empty' }}">
+        {% if r.inv and r.status in ("verified", "needs_human") %}
+          <a href="issues/{{ r.number }}.html">{% if r.result.startswith("merge #") %}<span class="ready">{{ r.result }}</span>{% else %}{{ r.result }}{% endif %} →</a>
+        {% elif r.status %}<span class="muted">{{ r.status }}</span>
+        {% else %}<span class="muted">—</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="note">⬜ not investigated · ✅ citations verified · ⚠️ a citation failed twice, needs a human · ✗ timed out or errored.
+  "Kind" is a guess from the title. Each result is judged from the diffs, not run; open a packet for the evidence and its limits.</p>
+</main>
+<script>
+  const buttons = document.querySelectorAll(".filters button");
+  const rows = document.querySelectorAll("tbody tr");
+  function apply(f) {
+    buttons.forEach(b => b.classList.toggle("on", b.dataset.f === f));
+    rows.forEach(r => {
+      const show = f === "all" || (f === "bug" && r.dataset.kind === "bug") ||
+                   (f === "done" && r.dataset.done === "yes") || (f === "todo" && r.dataset.done === "no");
+      r.style.display = show ? "" : "none";
+    });
+  }
+  buttons.forEach(b => b.addEventListener("click", () => apply(b.dataset.f)));
+  apply("bug");
+</script>
+</body>
+</html>

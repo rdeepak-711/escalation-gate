@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #432 · escalation packet · interviewstreet/hiring-agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373;
+    --line:#e5e5e5; --code-bg:#f5f5f5;
+    --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0;
+    --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
+    --red:#9f1239; --red-bg:#fff1f2; --red-line:#fecdd3; --red-edge:#e11d48;
+    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 var(--sans); }
+  a { color:inherit; }
+  /* navigation: one sticky bar across the top */
+  nav { position:sticky; top:0; z-index:10; background:rgba(255,255,255,.96); border-bottom:1px solid var(--line);
+        backdrop-filter:blur(6px); }
+  nav .bar { max-width:1200px; margin:0 auto; padding:10px 32px; display:flex; align-items:center; gap:24px; }
+  nav .who { display:flex; gap:10px; align-items:baseline; flex-shrink:0; }
+  nav .repo { font-size:13px; color:var(--muted); }
+  nav .issue { font-weight:600; color:var(--ink); font-size:14px; }
+  nav ul { list-style:none; margin:0 0 0 auto; padding:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+  nav li { flex-shrink:0; }
+  nav a { display:block; padding:5px 10px; border-radius:6px; text-decoration:none; color:var(--soft); font-size:14px; }
+  nav a:hover { background:#f5f5f5; color:var(--ink); }
+  nav a.active { background:#f0f0f0; color:var(--ink); font-weight:500; }
+
+  main { padding:32px 32px 80px; }
+  .page { max-width:1200px; margin:0 auto; }
+  section { scroll-margin-top:72px; margin-top:40px; }
+  h1 { font-size:26px; line-height:1.3; color:var(--ink); margin:0 0 8px; letter-spacing:-.01em; overflow-wrap:break-word; }
+  h2 { font-size:17px; color:var(--ink); margin:0 0 6px; }
+  .meta { color:var(--soft); font-size:14px; padding-bottom:24px; border-bottom:1px solid var(--line); }
+  .intro { color:var(--soft); font-size:14px; margin:0 0 12px; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-top:10px; }
+  .verdict { border:2px solid var(--ink); padding:20px 22px; margin-top:28px; }
+  .verdict.none { border-color:var(--amber-line); background:var(--amber-bg); }
+  .verdict h3 { font-size:18px; margin:0; color:var(--ink); }
+  .verdict .sub { color:var(--soft); font-size:14px; margin:4px 0 0; }
+  .verdict .counts { border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:14px; color:var(--soft); }
+  .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .pills { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; flex-shrink:0; }
+
+  .pill { display:inline-block; padding:1px 8px; border-radius:4px; font-size:13px; font-weight:500; border:1px solid; white-space:nowrap; }
+  .pill.green { background:var(--green-bg); color:var(--green); border-color:var(--green-line); }
+  .pill.amber { background:var(--amber-bg); color:var(--amber); border-color:var(--amber-line); }
+  .pill.red { background:var(--red-bg); color:var(--red); border-color:var(--red-line); }
+  .pill.grey { background:#f5f5f5; color:var(--soft); border-color:var(--line); }
+
+  details summary { cursor:pointer; color:var(--ink); font-size:14px; text-decoration:underline; text-underline-offset:3px; margin-top:10px; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details[open] summary { margin-bottom:8px; }
+
+  ol.steps { margin:0; padding-left:22px; }
+  ol.steps li { margin:6px 0; padding-left:4px; }
+  ol.steps li::marker { font-weight:600; color:var(--muted); }
+
+  .loc { font:500 14px/1.4 var(--mono); color:var(--ink); overflow-wrap:anywhere; }
+  .quote { background:var(--code-bg); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin:10px 0 8px;
+           font:13px/1.5 var(--mono); color:var(--ink); white-space:pre-wrap; overflow-wrap:break-word; }
+  .why { font-size:14px; color:var(--text); margin:0; }
+  .card.failed { border-left:3px solid var(--red-edge); }
+
+  .note { background:#f5f5f5; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:14px; margin-top:4px; }
+  .pr.recommended { border:2px solid var(--ink); }
+  .pr .title { font-weight:500; color:var(--ink); }
+  .pr .title a { text-decoration:none; }
+  .pr .title a:hover { text-decoration:underline; }
+  .pr .by { color:var(--muted); font-size:14px; }
+  .pr .why { margin-top:6px; }
+  .pr .because { font:12px/1.5 var(--mono); color:var(--muted); margin-top:8px; overflow-wrap:anywhere; }
+  .fold { background:var(--card); border:1px solid var(--line); border-radius:8px; margin-top:10px; padding:12px 18px; }
+  .fold > summary { margin:0; text-decoration:none; display:flex; justify-content:space-between; }
+  .fold > summary .show { text-decoration:underline; text-underline-offset:3px; }
+  .fold .pr { border:0; border-top:1px solid var(--line); border-radius:0; padding:12px 0 0; margin-top:12px; }
+
+  .limits ul { margin:6px 0 0; padding-left:20px; font-size:14px; }
+  .limits li { margin:6px 0; }
+
+  .tiles { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:16px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .tile .big { font-size:24px; font-weight:600; color:var(--ink); line-height:1.2; }
+  .tile .small { font-size:13px; color:var(--soft); margin-top:4px; }
+
+  .flow { display:grid; grid-template-columns:repeat(3, 1fr); gap:28px 30px; margin-top:12px; counter-reset:step; }
+  .flow .box { position:relative; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .flow .box.last { border:2px solid var(--ink); }
+  .flow .box.failed { border-color:var(--red-edge); }
+  .flow .box .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+  .flow .box .loc { font-size:12px; }
+  .flow .box .label { font-weight:600; color:var(--ink); font-size:14px; margin-top:6px; }
+  .flow .box .num { font-size:12px; color:var(--muted); }
+  .flow .box:not(:last-child):not(:nth-child(3n))::after { content:"→"; position:absolute; right:-23px; top:50%;
+       transform:translateY(-50%); color:var(--muted); font-size:16px; }
+  .flow .step { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+       background:var(--ink); color:#fff; font-size:12px; font-weight:600; flex-shrink:0; }
+  .flow .box .head { display:flex; gap:8px; align-items:center; min-width:0; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .cols .card { margin-top:0; height:100%; }
+
+  .files { columns:3 340px; column-gap:14px; }
+  .files .file { break-inside:avoid; margin-bottom:14px; }
+  .whys { display:grid; grid-template-columns:repeat(auto-fit, minmax(420px, 1fr)); gap:0 14px; align-items:start; }
+  .file { background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .file > .fhead { display:flex; justify-content:space-between; gap:8px; padding:10px 14px; background:#fafafa; border-bottom:1px solid var(--line); }
+  .file > .fhead .loc { font-size:13px; }
+  .file .cite { padding:12px 14px; border-top:1px solid var(--line); }
+  .file .cite:first-of-type { border-top:0; }
+  .file .cite.failed { border-left:3px solid var(--red-edge); }
+  .file .cite .quote { margin:8px 0 6px; }
+  .count { font-size:12px; color:var(--soft); background:#f0f0f0; border-radius:999px; padding:1px 8px; white-space:nowrap; flex-shrink:0; }
+
+  .funnel { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:12px 0 16px; }
+  .funnel .stage { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:14px; position:relative; }
+  .funnel .stage b { display:block; font-size:20px; color:var(--ink); }
+  .funnel .stage.end { background:var(--green-bg); border-color:var(--green-line); }
+  .funnel .stage.end.none { background:var(--amber-bg); border-color:var(--amber-line); }
+
+  .board { display:grid; grid-template-columns:90px 1fr 1fr; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--card); }
+  .board > div { padding:10px; border-top:1px solid var(--line); border-left:1px solid var(--line); }
+  .board > .h { font-size:12px; font-weight:600; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; background:#fafafa; }
+  .board > .h.row { display:flex; align-items:center; }
+  .board > div:nth-child(-n+3) { border-top:0; }
+  .board > div:nth-child(3n+1) { border-left:0; }
+  .board .empty { color:var(--muted); text-align:center; }
+  .mini { border:1px solid var(--line); border-radius:6px; padding:8px 10px; margin-bottom:8px; font-size:14px; }
+  .mini:last-child { margin-bottom:0; }
+  .mini.recommended { border:2px solid var(--ink); }
+  .mini .by { color:var(--muted); font-size:12px; }
+  .mini a { text-decoration:none; color:var(--ink); font-weight:500; }
+  .mini a:hover { text-decoration:underline; }
+  .detail-head { font-size:14px; font-weight:600; color:var(--ink); margin:20px 0 0; }
+
+  @media (max-width: 960px) {
+    .tiles { grid-template-columns:repeat(2, 1fr); }
+  }
+
+  @media (max-width: 760px) {
+    nav .bar { flex-direction:column; align-items:stretch; gap:6px; padding:10px 16px 6px; }
+    nav .who { justify-content:space-between; }
+    nav ul { margin:0; }
+    nav a { padding:4px 10px; font-size:13px; }
+    .whys { grid-template-columns:1fr; }
+    main { padding:24px 16px 64px; }
+    h1 { font-size:21px; }
+    section { scroll-margin-top:100px; }
+    .row { flex-direction:column; gap:8px; }
+    .pills { justify-content:flex-start; }
+    .verdict { padding:16px; }
+    .cols { grid-template-columns:1fr; }
+    .flow { grid-template-columns:1fr; gap:22px; }
+    .flow .box:not(:last-child):not(:nth-child(3n))::after,
+    .flow .box:nth-child(3n):not(:last-child)::after { content:"↓"; position:absolute; right:auto; left:50%; top:auto;
+       bottom:-21px; transform:none; color:var(--muted); font-size:16px; }
+    .funnel { grid-template-columns:1fr 1fr; }
+    .board { grid-template-columns:1fr; }
+    .board > div { border-left:0 !important; }
+    .board > .h.col, .board > .corner { display:none; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="bar">
+    <div class="who"><span class="issue">Issue #432</span><span class="repo">interviewstreet/hiring-agent</span></div>
+    <ul>
+      <li><a href="#verdict">Verdict</a></li>
+      <li><a href="#overview">What's wrong</a></li>
+      <li><a href="#cause">Evidence</a></li>
+      <li><a href="#prs">Pull requests</a></li>
+      <li><a href="#limits">Limits</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main><div class="page">
+    <header>
+      <h1>Issue #432: Bug: role.json min_final_score / max_final_score are loaded but never applied to the final score</h1>
+      <div class="meta">interviewstreet/hiring-agent · commit e0ece80 · investigation <span class="pill green">verified</span> · 2026-10-11 · investigation cost $0.04</div>
+    </header>
+
+    <section id="verdict" style="margin-top:0">
+      <div class="card verdict none">
+        <h3>No open PR fixes this and merges clean</h3>
+<p class="sub">0 fix it but don't merge clean, 2 fix it partly. See the board below.</p>      </div>
+      <div class="tiles">
+        <div class="tile"><div class="big">8/8</div><div class="small">citations verified in code</div></div>
+        <div class="tile"><div class="big">192 → 18</div><div class="small">open PRs shortlisted by cited lines</div></div>
+        <div class="tile"><div class="big">0 fix</div><div class="small">0 merge clean · 2 partly</div></div>
+        <div class="tile"><div class="big">$0.04</div><div class="small">investigation cost</div></div>
+      </div>
+    </section>
+
+
+    <section id="overview">
+      <div class="cols">
+        <div class="card" id="wrong">
+          <h2>What's wrong</h2>
+          The report is confirmed. `min_final_score` and `max_final_score` are parsed into `Role` in roles.py, but nothing outside roles.py reads them. `print_evaluation_results` in score.py computes the total as category scores + bonus − deductions.
+          <details><summary>Show full explanation</summary>It caps the total only at `sum(category max) + role.bonus_max`, which is a value it recomputes on its own, and it has no lower bound. `Deductions.total` is only constrained by `ge=0`, so a large deduction can push the total below `min_final_score`. A role author who sets `max_final_score` to something other than `sum(categories) + bonus_max` sees no effect. The CSV path in transform.py is also unclamped: its `total_score` sums only the category scores and leaves out bonus and deductions. One detail differs from the report: the intern role.json in this checkout has `max_final_score` 130, not 120.</details>
+          <div class="intro" style="margin:10px 0 0">Model confidence: high.</div>
+        </div>
+        <div class="card" id="reproduce">
+          <h2>How to reproduce</h2>
+          <ol class="steps"><li>Use the software_engineering_intern role, whose role.json sets min_final_score to -20.</li><li>Produce or mock an evaluation whose category scores are low and whose deductions.total is large, for example 100. Deductions.total has no upper bound, only ge=0.</li><li>Call print_evaluation_results(evaluation, role, ...) from score.py. The printed OVERALL SCORE is below -20 (for example -60). Nothing raises the total to min_final_score.</li><li>Edit role.json to set max_final_score to a value lower than sum(category max) + bonus_max, for example 50, and use an evaluation that scores high. The printout is still capped at max_score + bonus_max, not at 50.</li><li>Run `grep -rn &#39;min_final_score\|max_final_score&#39; --include=*.py .`. Only roles.py matches. score.py and transform.py never reference these fields.</li></ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="cause">
+      <h2>Evidence</h2>
+      <p class="intro">Each citation was checked against the code at e0ece80.</p>
+      <div class="files">
+        <div class="file">
+          <div class="fhead"><span class="loc">roles.py</span><span class="count">2 citations</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 227</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">min_final_score=int(manifest.get(&#34;min_final_score&#34;, 0)),</div>
+            <p class="why">The field is parsed into Role here. The grep found no read of it anywhere else in the Python code.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 228</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">max_final_score=int(</div>
+            <p class="why">max_final_score is parsed here. Its default is sum(category max) + bonus_max, and nothing else uses it.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">score.py</span><span class="count">3 citations</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 84</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">total_score -= evaluation.deductions.total</div>
+            <p class="why">Deductions are subtracted with no lower bound or floor.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 87</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">max_possible_score = max_score + role.bonus_max</div>
+            <p class="why">The cap is recomputed from category maxima plus bonus_max instead of using role.max_final_score.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 88</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">if total_score &gt; max_possible_score:</div>
+            <p class="why">Only an upper clamp exists. There is no comparison against role.min_final_score.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">models.py</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 236</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">ge=0,</div>
+            <p class="why">Deductions.total has only a lower bound, so deductions can be arbitrarily large.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">transform.py</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 690</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">csv_row[&#34;total_score&#34;] = total_score</div>
+            <p class="why">The CSV total sums only the category scores and applies no bonus, deductions, or min/max clamp.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">roles/software_engineering_intern/role.json</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 36</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">&#34;min_final_score&#34;: -20,</div>
+            <p class="why">The intern role configures a floor that is never enforced.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="prs">
+      <h2>Pull requests</h2>
+      <p class="intro">Verdicts are judged from the diff, not run. Merge status is a real git check against e0ece80.</p>
+      <div class="funnel">
+<div class="stage"><b>192</b>open PRs</div>        <div class="stage"><b>18</b>change a cited line or mention the issue</div>
+        <div class="stage"><b>2</b>change the cause</div>
+        <div class="stage end none"><b>0</b>fix and merge clean</div>
+      </div>
+<div class="note">#292 and #443 all change the cause. Once one is merged, the others duplicate it.</div>      <div class="board" style="margin-top:12px">
+        <div class="h corner"></div><div class="h col">Merges clean</div><div class="h col">Conflicts or unknown</div>
+        <div class="h row">Fixes</div>
+        <div>
+<div class="empty">—</div>        </div>
+        <div>
+<div class="empty">—</div>        </div>
+        <div class="h row">Partly</div>
+        <div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill amber">Partly</span>
+              <span class="pill green">Merges clean</span>
+            </div>
+            <a href="#pr-443">#443 · fix: clamp final score to role min/max_final_score</a> <span class="by">by rajarshidattapy</span>
+          </div>
+        </div>
+        <div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill amber">Partly</span>
+              <span class="pill red">Conflicts</span>
+            </div>
+            <a href="#pr-292">#292 · fix(scoring): fix score clamping, CSV accuracy, and prompt consistency</a> <span class="by">by KothurDineshReddy</span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-head">Why each verdict</div>
+      <div class="whys">
+      <div class="card pr" id="pr-292">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/292">#292 · fix(scoring): fix score clamping, CSV accuracy, and prompt consistency</a></span> <span class="by">by KothurDineshReddy</span></div>
+          <div class="pills">
+            <span class="pill amber">Partly</span>
+            <span class="pill red">Conflicts</span>
+          </div>
+        </div>
+        <p class="why">It adds a lower-bound clamp and puts bonus and deductions into the CSV total, but it uses hardcoded MIN/MAX_FINAL_SCORE constants from evaluator instead of role.min_final_score and role.max_final_score, so role.json settings still have no effect.</p>
+        <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes score.py:88</div>
+      </div>
+      <div class="card pr" id="pr-443">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/443">#443 · fix: clamp final score to role min/max_final_score</a></span> <span class="by">by rajarshidattapy</span></div>
+          <div class="pills">
+            <span class="pill amber">Partly</span>
+            <span class="pill green">Merges clean</span>
+          </div>
+        </div>
+        <p class="why">It clamps the print_evaluation_results total to [role.min_final_score, role.max_final_score], which removes the missing floor and the recomputed cap, but it doesn&#39;t touch transform.py, so the CSV total still sums only category scores with no bonus, deductions or clamp.</p>
+        <div class="because">Shortlisted because: mentions the issue, changes score.py:84, changes score.py:87, changes score.py:88</div>
+      </div>
+      </div>
+      <details class="fold">
+        <summary><span>16 PRs that don't fix it</span><span class="show">Show</span></summary>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/10">#10 · Update deprecated google-generativeai dependency to google-genai</a></span> <span class="by">by 12fahed</span></div>
+          <p class="why">It migrates GeminiProvider to the google-genai SDK and doesn&#39;t touch scoring.</p>
+          <div class="because">Shortlisted because: changes models.py:236</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/38">#38 · ref - added feature for job match.</a></span> <span class="by">by ashishnallana</span></div>
+          <p class="why">It adds an optional job_match score and job description plumbing, and leaves the cap and floor logic unchanged.</p>
+          <div class="because">Shortlisted because: changes transform.py:690</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/101">#101 · Fix: prevent invalid or incomplete PDFs from being evaluated by LLM</a></span> <span class="by">by janhavimug</span></div>
+          <p class="why">It adds PDF and resume validation before the LLM call and leaves the hardcoded &#39;max_score + 20&#39; cap with no floor and no use of the role bounds.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes score.py:88</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/122">#122 · feat: Add Scholarship &amp; Mentorship scoring category and fix provider …</a></span> <span class="by">by vivekTiw120303</span></div>
+          <p class="why">It adds a scholarship_mentorship category and provider fixes, and leaves the final-score cap and floor logic unchanged.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/140">#140 · Add Structured Output Support for Gemini API</a></span> <span class="by">by Mohd-Mursaleen</span></div>
+          <p class="why">It adds Gemini structured output and strips pydantic constraints from the models; it doesn&#39;t enforce min or max final score anywhere.</p>
+          <div class="because">Shortlisted because: changes models.py:236</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/150">#150 · Fix fork contribution detection using contributors API</a></span> <span class="by">by Mohd-Mursaleen</span></div>
+          <p class="why">Its visible diff is the same models.py structured-output change (constraints removed); it adds no final-score clamping.</p>
+          <div class="because">Shortlisted because: changes models.py:236</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/157">#157 · feat: Added role fit scoring</a></span> <span class="by">by PranuPranjal</span></div>
+          <p class="why">It adds an optional role_fit category and CSV columns, and leaves the final-score cap and floor logic unchanged.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes transform.py:690</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/178">#178 · Integrate Codeforces profile scoring and bonus points</a></span> <span class="by">by pranjal1codes</span></div>
+          <p class="why">It adds Codeforces, LeetCode and token-usage plumbing and a problem_solving category, and leaves the final-score cap and floor logic unchanged.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes transform.py:690</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/317">#317 · fix: clamp out-of-range evaluation scores instead of crashing</a></span> <span class="by">by Codevena</span></div>
+          <p class="why">It clamps individual LLM fields (deductions, bonus, category score) before validation so the run doesn&#39;t crash, and it doesn&#39;t apply the role&#39;s final-score bounds to the total.</p>
+          <div class="because">Shortlisted because: changes models.py:236</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/333">#333 · feat: implement dynamic role-based scoring limits</a></span> <span class="by">by Shrii939</span></div>
+          <p class="why">It adds per-experience-level category maxima in roles.py and removes the hardcoded category_maxes dict, and doesn&#39;t touch final-score clamping or the CSV total.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes score.py:88</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/347">#347 · feat: add competitive programming scoring (Codeforces, ICPC, LeetCode)</a></span> <span class="by">by LakshyaTyagi15</span></div>
+          <p class="why">It adds a competitive_programming category and raises the hardcoded bonus cap comment to 140, and leaves the cap and floor logic as it was.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes transform.py:690</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/370">#370 · refactor: centralize and test score arithmetic</a></span> <span class="by">by yanglluo</span></div>
+          <p class="why">It is a refactor into calculate_total_score that keeps the same &#39;max + 20&#39; cap, adds no floor, and leaves the CSV path alone.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes score.py:88</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/384">#384 · feat: rewrite resume prose after scoring</a></span> <span class="by">by Uknowme-h</span></div>
+          <p class="why">It moves the arithmetic into compute_totals but keeps the &#39;max_score + role.bonus_max&#39; cap, and nothing in the diff reads role.min_final_score or role.max_final_score.</p>
+          <div class="because">Shortlisted because: changes score.py:84, changes score.py:87, changes score.py:88, changes transform.py:690</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/438">#438 · fix: cap category scores with role.json weights, not LLM-returned max</a></span> <span class="by">by rajarshidattapy</span></div>
+          <p class="why">It only switches the category cap and denominators to role.categories[*].max and never reads min_final_score or max_final_score, and it adds no lower bound or bonus/deduction handling to the CSV total.</p>
+          <div class="because">Shortlisted because: mentions the issue, changes transform.py:690</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/454">#454 · fix: validate role weights and score bounds before evaluation</a></span> <span class="by">by Mike-here</span></div>
+          <p class="why">It validates min/max_final_score types and ordering in load_role, but nothing in the scoring path starts reading those fields, so they remain unenforced.</p>
+          <div class="because">Shortlisted because: changes roles.py:227, changes roles.py:228</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/471">#471 · feat: add optional evaluation evidence trace</a></span> <span class="by">by sumyuck</span></div>
+          <p class="why">It adds an optional evidence-trace feature with citations and reports, and leaves the total computation and clamping unchanged.</p>
+          <div class="because">Shortlisted because: changes models.py:236</div>
+        </div>
+      </details>
+    </section>
+
+    <section id="limits" class="limits">
+      <div class="card">
+        <h2>What this packet does not prove</h2>
+        <ul>
+          <li>Citations are checked against the code. The explanation that links them, the order of the chain, and any claim about outside systems (APIs, libraries) are the model's reasoning and are not checked.</li>
+          <li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+          <li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers have drifted, is missed, so this is not proof that no other PR fixes it.</li>
+        </ul>
+      </div>
+    </section>
+</div></main>
+<script>
+  // highlight the section currently on screen in the navigation
+  const links = [...document.querySelectorAll("nav a")];
+  const seen = new IntersectionObserver(entries => {
+    for (const entry of entries) if (entry.isIntersecting) {
+      links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id));
+    }
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  document.querySelectorAll("main section").forEach(s => seen.observe(s));
+</script>
+</body>
+</html>

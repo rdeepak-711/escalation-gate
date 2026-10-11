@@ -51,6 +51,8 @@ uv run python -m gate.cli --repo owner/name --symptom "what the user saw, in pla
 open out/packet-<id>.html
 ```
 
+To see every open issue with its status (⬜ not investigated, ✅ verified, ⚠️ needs a human), run `uv run python -m gate.cli --repo owner/name --list`. It prints a table and writes `site/<name>/index.html`, a board that links each investigated issue to its packet. Every `--issue` run updates the board.
+
 The first run on a repo clones it into `vendor/` and collects its open issues and PRs (a few minutes for a busy repo). Add `--refresh` to collect again. `--model opus` uses a stronger model for both Claude steps (about 5× the cost).
 
 Each stage can also be run alone: `gate.collect`, `gate.investigate`, `gate.candidates`, `gate.packet`.
@@ -60,6 +62,7 @@ Tests (no network, no Claude, no Postgres needed): `uv run pytest -q`
 ## Limits
 
 - One retry. If the citations still fail, the run is marked `needs_human` and the packet shows which citation failed.
+- Tested end to end on two unrelated repos: interviewstreet/hiring-agent and interviewstreet/spark-stratifier.
 - The PR verdicts were compared with a careful hand review on two cases only. They agreed, after the hand review was corrected. That is a sanity check, not proof that it generalises.
 - Runs vary: the same model on the same issue can go deeper one time than another. The checker catches false citations, not shallow reasoning.
 

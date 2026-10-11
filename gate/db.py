@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS pr_verdicts (
     why text NOT NULL,
     PRIMARY KEY (investigation_id, pr)
 );
+ALTER TABLE investigations ADD COLUMN IF NOT EXISTS hidden boolean NOT NULL DEFAULT false;
+ALTER TABLE pr_verdicts ADD COLUMN IF NOT EXISTS merge text;
 """
 
 def connect() -> psycopg.Connection:

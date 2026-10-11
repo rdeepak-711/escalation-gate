@@ -37,6 +37,8 @@
   h2 { font-size:26px; color:var(--ink); letter-spacing:-.01em; margin:0 0 8px; }
   .lead { color:var(--soft); margin:0 0 24px; max-width:720px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px 22px; }
+  a.card.board { text-decoration:none; display:block; }
+  a.card.board:hover { border-color:var(--ink); }
   .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
   .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -83,7 +85,7 @@
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="/">escalation-gate</a>
-  <nav><a href="#how">How it works</a><a href="#proof">What's proven</a><a href="https://github.com/rdeepak-711/escalation-gate">GitHub</a></nav>
+  <nav><a href="#boards">Boards</a><a href="#how">How it works</a><a href="#proof">What's proven</a><a href="https://github.com/rdeepak-711/escalation-gate">GitHub</a></nav>
 </div></header>
 
 <main class="wrap">
@@ -92,6 +94,7 @@
     <p>Give it a repo and one issue. It reads the code, cites every claim as <code>file:line</code> and checks each citation against the code. Then it narrows the open pull requests to the ones that touch the bug and tells you which one to merge, with a real merge check.</p>
     <div class="btns">
       <a class="btn dark" href="/packets/hiring-agent-424.html">See a real packet</a>
+      <a class="btn light" href="/hiring-agent/">Browse the hiring-agent board</a>
       <a class="btn light" href="https://github.com/rdeepak-711/escalation-gate">Code on GitHub</a>
     </div>
   </div>
@@ -123,6 +126,28 @@
         <p>Both PRs touch the exact lines where the bug lives, which is why the shortlist caught them. The verdicts are labelled as judged from the diff, because nothing was run.</p>
       </div>
     </div>
+  </section>
+
+  <section id="boards">
+    <h2>Repo boards</h2>
+    <p class="lead">Point it at a repo and it lists every open issue with its status. Pick an issue number and it investigates that one; the board updates with a link to the packet.</p>
+    <div class="grid2">
+      <a class="card board" href="/hiring-agent/">
+        <div class="small">interviewstreet/hiring-agent</div>
+        <div class="big" style="font-size:22px;margin-top:4px">162 open issues · 192 open PRs</div>
+        <div class="small">2 investigated · 1 has a PR that fixes it and merges clean →</div>
+      </a>
+      <a class="card board" href="/spark-stratifier/">
+        <div class="small">interviewstreet/spark-stratifier</div>
+        <div class="big" style="font-size:22px;margin-top:4px">3 open issues · 2 open PRs</div>
+        <div class="small">1 investigated · root cause found, no PR fixes it yet →</div>
+      </a>
+    </div>
+    <pre style="margin-top:14px"><span class="c"># the board: every open issue, ⬜ not yet · ✅ verified · ⚠️ needs a human</span>
+uv run python -m gate.cli --repo owner/name --list
+
+<span class="c"># investigate one by number; the board updates</span>
+uv run python -m gate.cli --repo owner/name --issue 476</pre>
   </section>
 
   <section id="how">
@@ -166,7 +191,7 @@ uv run python -m gate.cli --repo owner/name --symptom "what the user saw"</pre>
   <section>
     <h2>Limits</h2>
     <div class="card">
-      <p style="margin-top:0">Tested end to end on one repo so far. Runs vary: the same model can search more narrowly one time than another, and a narrower search gives a narrower verdict. The citation checker catches false quotes, not shallow reasoning. Next: apply the recommended PR to a throwaway copy, run the reproduction before and after, and put the measured result in the packet.</p>
+      <p style="margin-top:0">Tested end to end on two unrelated repos so far (an LLM résumé scorer and a PySpark utility). Runs vary: the same model can search more narrowly one time than another, and a narrower search gives a narrower verdict. The citation checker catches false quotes, not shallow reasoning. Next: apply the recommended PR to a throwaway copy, run the reproduction before and after, and put the measured result in the packet.</p>
     </div>
   </section>
 </main>
