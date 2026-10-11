@@ -6,3 +6,13 @@ __pycache__/
 .hf-cache/
 vendor/
 *.pyc
+
+# private working notes (kept locally, never published)
+PLAN.md
+findings.md
+docs/decisions.md
+docs/architecture-explainer.html
+docs/v1-explainer.html
+docs/design/stitch-packet.html
+docs/design/stitch-packet.png
+tasks/
