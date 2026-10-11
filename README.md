@@ -6,7 +6,7 @@ It is built for the moment a bug report lands on a busy repo: an engineer wants 
 
 ## What a packet looks like
 
-On `interviewstreet/hiring-agent` issue #424 (scores swing between runs), one command produced:
+On `interviewstreet/hiring-agent` issue #424 (scores swing between runs), one command produced ([see the packet](docs/examples/packet-424.html)):
 
 - **Root cause:** `github.py` labels each repo `project_type`, the project-selection step drops the label, and `transform.py:897` never prints it, so the grader is told to score by a label it never sees. 7 citations, all checked against the code.
 - **Recommended:** merge #425, which was judged to fix both halves from its diff and merges clean.
@@ -65,4 +65,4 @@ Tests (no network, no Claude, no Postgres needed): `uv run pytest -q`
 
 Apply each "fixes" PR to a throwaway copy, run the reproduction before and after, and put the measured result in the packet. That turns "judged from the diff" into "measured".
 
-Design decisions and their trade-offs: `docs/decisions.md`. Execution flow by function: `docs/flow.md`.
+Example output: [`docs/examples/packet-424.html`](docs/examples/packet-424.html) (open it in a browser) and the same packet as [Markdown](docs/examples/packet-424.md). Execution flow by function: [`docs/flow.md`](docs/flow.md).
