@@ -34,6 +34,19 @@ CREATE TABLE IF NOT EXISTS pr_files (
     PRIMARY KEY (repo, pr, filename),
     FOREIGN KEY (repo, pr) REFERENCES prs(repo, number) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS investigations (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    repo text NOT NULL,
+    issue integer,
+    symptom text,
+    session_id uuid NOT NULL,
+    status text NOT NULL CHECK (status IN ('verified', 'needs_human', 'timeout', 'error')),
+    attempts integer NOT NULL,
+    report jsonb,
+    failures text[] NOT NULL,
+    costs_usd double precision[] NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+)
 """
 
 def connect() -> psycopg.Connection:
