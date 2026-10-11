@@ -69,3 +69,22 @@ def test_costs_are_kept_per_attempt(repo, monkeypatch):
     fake_claude(monkeypatch, result(BAD, cost=0.7), result(GOOD, cost=0.2))
     outcome = inv.investigate("Issue #1: x", repo)
     assert outcome["costs_usd"] == [0.7, 0.2]
+
+def test_retry_command_resumes_the_same_session(tmp_path, monkeypatch):
+    """Runs the real run_claude command builder (only Popen is faked): a retry must pass --resume <id>."""
+    seen = {}
+
+    class FakePopen:
+        returncode = 0
+
+        def __init__(self, cmd, stdout, **kwargs):
+            seen["cmd"] = cmd
+            stdout.write('{"type": "result", "structured_output": {}}\n')
+
+        def communicate(self, prompt, timeout=None):
+            return None, ""
+
+    monkeypatch.setattr(inv.subprocess, "Popen", FakePopen)
+    inv.run_claude("p", tmp_path, "abc", resume=True, log=tmp_path / "log.jsonl")
+    assert seen["cmd"][seen["cmd"].index("--resume") + 1] == "abc"
+    assert "--session-id" not in seen["cmd"]

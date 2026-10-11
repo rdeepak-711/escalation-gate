@@ -4,7 +4,7 @@
 
 ## Summary
 
-Scoring the same résumé 15 times gives scores spread over 6 points (3 points at temperature 0). Every category is stable except deductions. The rubric tells the grader to deduct 3–5 points "when GitHub data shows all projects are 'self_project' type", but the GitHub text the grader receives never contains that label, so it guesses. Of the open PRs that claim to fix score consistency, one (#425) fixes this cause completely and merges cleanly. Two others fix it only partly, and the rest don't touch it.
+Scoring the same résumé 15 times gives scores spread over 6 points (3 points at temperature 0). Every category is stable except deductions. The rubric tells the grader to deduct 3–5 points "when GitHub data shows all projects are 'self_project' type", but the GitHub text the grader receives never contains that label, so it guesses. Of the open PRs, two fix this cause completely: #425 (small, merges cleanly) and #415 (inside an unrelated feature, conflicts). Two others fix it only partly, and the rest don't touch it. *(Corrected 2026-10-11: the tool's step 05 verdicts showed #415 fixes both halves and found #242; both were checked by hand against the diffs.)*
 
 ## How to reproduce
 
@@ -42,7 +42,8 @@ I checked all 191 open PRs. Three write `project_type` into the grader's text. T
 |---|---|---|---|
 | **#425** "pass project_type and contributor counts through to the evaluator" | Copies `project_type` and the commit counts back onto the selected projects by repo name (`restore_repo_metadata`, github.py), **and** prints them in `convert_github_data_to_text`. 2 files, +36 lines. References #424. | **Yes, both halves.** The label can no longer be lost at the selection step, and the grader now sees it. | Yes |
 | #462 "ensemble scoring to mitigate LLM non-determinism" | Runs the grader N times and takes the median. Also prints `project_type` in `convert_github_data_to_text`. | **Partly.** It prints the label but doesn't restore it after selection, so it shows `N/A` whenever the selection model drops the field. The median narrows the spread at N× the cost, but it hides the guess rather than removing it. | Yes |
-| #415 "add AWS Bedrock provider transport" | A new provider. It also prints `project_type` (with `unknown` as the fallback) plus live URL and commit counts. | **Partly.** Same gap at the selection step as #462. The fix is buried in an unrelated feature PR. | **No, conflicts** |
+| #415 "add AWS Bedrock provider transport" | A new provider. It also adds `resolve_selected_projects` (github.py), which rebuilds every selected project from the fetched data, and prints `project_type`, contributors and commit counts in `convert_github_data_to_text`. | **Yes, both halves** *(corrected 2026-10-11; first version said "partly")*. But the fix is buried in an unrelated feature PR. | **No, conflicts** |
+| #242 "validate LLM bonus claims and reject hallucinated GitHub projects" | Replaces each selected project with the fetched record (`valid_by_name[...]`, github.py). | **Partly** *(added 2026-10-11)*. The label survives selection, but `transform.py` is untouched, so the grader still never sees it. | not checked |
 | #376, #410 | Reword the `self_project` rule in `criteria.jinja`. | **No.** The reworded rule still depends on the label the grader can't see. | not checked |
 | #301, #292, #419, #471, and the temperature or provider PRs | Remove PII from the grader's input, clamp score ranges, add score explanations after scoring, add an evidence trace, change sampling settings. | **No.** None of them gives the grader the missing label. Sampling changes are covered by the temperature-0 run above: 3 points remain. | not checked |
 

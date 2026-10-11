@@ -46,7 +46,15 @@ CREATE TABLE IF NOT EXISTS investigations (
     failures text[] NOT NULL,
     costs_usd double precision[] NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now()
-)
+);
+CREATE TABLE IF NOT EXISTS pr_verdicts (
+    investigation_id bigint NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    pr integer NOT NULL,
+    reasons text[] NOT NULL,
+    verdict text NOT NULL CHECK (verdict IN ('fixes', 'partly', 'no')),
+    why text NOT NULL,
+    PRIMARY KEY (investigation_id, pr)
+);
 """
 
 def connect() -> psycopg.Connection:

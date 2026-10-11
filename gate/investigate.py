@@ -56,12 +56,13 @@ RETRY_TEMPLATE = """Some of your evidence did not match the code:
 
 Open each cited file again, fix or remove those evidence items, and answer again in the same format."""
 
-def run_claude(prompt: str, repo_dir: Path, session_id: str, resume: bool, log: Path, model: str | None = None) -> dict | None:
+def run_claude(prompt: str, repo_dir: Path, session_id: str, resume: bool, log: Path, model: str | None = None,
+               schema: dict = SCHEMA, tools: str = "Read,Grep,Glob") -> dict | None:
     """Run one Claude Code turn, streaming every event into `log`.
     Returns the final result event, or None if it timed out (the log keeps everything up to the kill).
     """
-    cmd = ["claude", "-p", "--safe-mode", "--output-format", "stream-json", "--verbose", "--json-schema", json.dumps(SCHEMA), "--allowedTools", "Read,Grep,Glob", "--disallowedTools", DISALLOWED]
-    cmd += [-"--resume", session_id] if resume else ["--session-id", session_id]
+    cmd = ["claude", "-p", "--safe-mode", "--output-format", "stream-json", "--verbose", "--json-schema", json.dumps(schema), "--tools", tools, "--disallowedTools", DISALLOWED]
+    cmd += ["--resume", session_id] if resume else ["--session-id", session_id]
     if model:
         cmd += ["--model", model]
 
