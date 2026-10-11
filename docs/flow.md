@@ -1,69 +1,68 @@
 # Execution flow
 
-How a run travels through the code, file by file. Status as of 2026-10-10: only step 01 (`gate/probe.py`) exists. Everything marked **planned** is in PLAN.md but not written yet, so it is described as designed, not as built.
+How a run travels through the code, file by file. Status as of 2026-10-11: steps 01–06 are built and tested (38 tests). Step 07 (one-command CLI + README) is **planned**.
 
-## The whole path (V1, as designed)
+## The whole path (V1)
 
 ```
-gh issue view ──► out/issue-<n>.json ─┐
-                                      ▼
-gh api (issues, PRs, PR files) ──► Postgres `escalation_gate`        [planned · step 02 · gate/collect.py, gate/db.py]
-                                      │
-                                      ▼
-investigate: claude -p, read-only, in vendor/<repo>  ──► JSON {cause, repro, evidence[], confidence}
-                                      │                       [built as a probe · step 01 · gate/probe.py]
-                                      ▼
-check: each evidence file:line:quote really exists     [planned · step 03 · gate/check.py]
-                                      │  fail → one retry with the failures → still fails → needs_human
-                                      ▼
-candidate PRs: SQL over pr_files                        [planned · step 05 · sql/ + gate/candidates.py]
-                                      │
-                                      ▼
-packet: Markdown + HTML page in out/                    [planned · step 06 · gate/packet.py]
+gh (issues, PRs, PR files) ──► gate/collect.py ──► Postgres: issues, prs, pr_files           [step 02]
+                                                        │
+python -m gate.investigate --repo R --issue N           ▼  (title + body read from `issues`)
+        or --symptom "…"  ──► gate/investigate.py: investigate()                              [step 04]
+                                 │  run_claude(): claude -p, tools Read/Grep/Glob, cwd vendor/<repo>
+                                 │  check() from gate/check.py on every citation                 [step 03]
+                                 │  fail → one retry in the same session (--resume) → still fails → needs_human
+                                 ▼
+                          Postgres: investigations (status, report jsonb, costs) + out/runs/<session>.jsonl
+                                 │
+python -m gate.candidates --investigation ID                                                  [step 05]
+                                 │  shortlist(): pr_files hunks that contain a cited line, or PR mentions #N
+                                 │  judge(): one claude -p call, --tools "" (diffs in the prompt), verdict per PR
+                                 ▼
+                          Postgres: pr_verdicts (fixes / partly / no + why + reasons)
+                                 │
+python -m gate.packet --investigation ID                                                      [step 06]
+                                 │  load(): re-runs check(), git fetch PR heads, git merge-tree per fix/partly PR
+                                 ▼
+                          out/packet-<ID>.md + out/packet-<ID>.html  (templates in gate/templates/)
 ```
-
-Entry point for the finished tool: `python -m gate.cli packet --repo owner/name --issue N` (**planned**, step 06/07). Today the only entry point is `uv run python -m gate.probe`.
 
 ## Boundaries: where the code leaves Python
 
 | Boundary | Crossed by | What crosses it | What can go wrong there |
 |---|---|---|---|
-| **GitHub (network)** | the `gh` CLI, called with `subprocess` | Issue text in. Later: issues, PRs, PR file diffs | Not logged in, rate limit, wrong repo name, offline |
-| **Claude Code (separate process + Anthropic's servers)** | `claude -p`, called with `subprocess.run` in `gate/probe.py:67` | Prompt in on stdin. One JSON "envelope" out on stdout | Timeout (6 min), usage limit, a wrong citation in a valid format |
-| **The target repo on disk** | Claude's Read/Grep/Glob tools, inside `vendor/hiring-agent` (`cwd=REPO_DIR`, `probe.py:70`) | Code is read. Nothing is written: Bash, Edit, Write and web tools are blocked | The copy goes stale against upstream, so we pin it at `e0ece80` |
-| **Postgres (separate server process)** | `psycopg`, at `DATABASE_URL` | Rows in and out | Server not running, database not created (**planned**) |
+| **GitHub (network)** | `gh` CLI in `gate/collect.py` `gh()`; `git fetch` in `gate/packet.py` `fetch_prs()` | Issues, PRs, PR diffs in; PR head commits in. Nothing is ever posted. | Not logged in, rate limit, network timeout (seen once in step 02). A failed fetch marks merge status "unknown". |
+| **Claude Code (separate process)** | `gate/investigate.py` `run_claude()`, used by both `investigate()` and `candidates.judge()` | Prompt in on stdin; stream-json events out into `out/runs/<session>.jsonl`; last line is the result | Timeout (360 s, run killed, log kept), no structured output, crash (RuntimeError, nothing saved) |
+| **Target repo on disk** | Claude's Read/Grep/Glob in `vendor/<repo>`; `check()`; `git merge-tree` | Code read only. `merge-tree --write-tree` writes git objects but never touches the working tree. | Clone goes stale against upstream (pinned at `e0ece80`) |
+| **Postgres** | `psycopg` via `gate/db.py` `connect()` (which also creates all five tables) | Rows in and out | Server down; a SQL typo in `SCHEMA` crashes every command at `connect()` (seen 2026-10-11) |
 
-There is no auth, tenant or web layer. Nothing is ever posted to GitHub.
+## Step by step, with the real functions
 
-## Step 01: `gate/probe.py`, traced line by line
+1. **Collect** — `gate/collect.py` `collect(repo)`: `gh issue list` → upsert `issues`, delete closed; `gh pr list` → upsert `prs`, delete closed (cascade removes their `pr_files`); per PR `gh api …/pulls/N/files` → replace its `pr_files` rows; commit per PR.
+2. **Investigate** — `gate/investigate.py` `main()` reads the issue from Postgres (or takes `--symptom`), calls `investigate()`:
+   - `run_claude(prompt, …, resume=False)` with a new `--session-id`.
+   - `check(report, repo_dir)` (`gate/check.py`): file inside repo, exists, line in range, quote within ±5 lines (whitespace-normalised).
+   - failures → `RETRY_TEMPLATE` → `run_claude(…, resume=True)` (same session); still failing → `needs_human`. Timeout or no structured output → stop, no retry.
+   - `save()` inserts one `investigations` row (`RETURNING id`).
+3. **Candidates** — `gate/candidates.py` `main()`:
+   - `shortlist()`: SQL pulls `pr_files` rows for the cited files and PRs whose title/body mention `#N`; `rank()` keeps a PR when `lines_hit()` finds a cited line inside a hunk's base range (`hunk_ranges()` reads `@@ -start,len`). Mentions first, then most lines hit; max 30.
+   - `build_prompt()`: cause + evidence + each PR's title, description and the diffs of cited files (12,000 chars max each).
+   - `judge()`: `run_claude(…, schema=VERDICT_SCHEMA, tools="")`; `check_verdicts()` demands exactly one verdict per shortlisted PR, one retry.
+   - Writes `pr_verdicts` (old rows for that investigation deleted first, so re-runs are safe).
+4. **Packet** — `gate/packet.py` `main()` → `load()`:
+   - re-runs `check()` so every ✅/❌ reflects the code at packet time;
+   - `fetch_prs()` fetches heads of fixes/partly PRs into `refs/gate/pr/<n>`; `merge_status()` verifies the ref exists, then `git merge-tree --write-tree --quiet HEAD ref` → clean (0) / conflicts (1);
+   - `render_markdown()` / `render_html()` fill `gate/templates/packet.md.j2` / `packet.html.j2` (HTML autoescaped); `recommend()` picks the first "fixes" PR that merges clean.
 
-1. `probe.py:8–12`: the paths are worked out from the file's own location. `ROOT` is the `escalation-gate/` folder, `REPO_DIR` is `vendor/hiring-agent`, input is `out/issue-424.json`, output is `out/probe-424.json`, and the limit is 360 s.
-2. `probe.py:51`: `main()` reads the issue JSON (made earlier by `gh issue view 424 … > out/issue-424.json`).
-3. `probe.py:37` + `.format(...)`: the issue's number, title and body are filled into `PROMPT_TEMPLATE`.
-4. `probe.py:58`: `cmd` is built: `claude -p`, JSON output, `--json-schema` (from `SCHEMA`, `probe.py:14`), Read/Grep/Glob allowed, Bash/Edit/Write/WebFetch/WebSearch blocked.
-5. `probe.py:67`: `subprocess.run` starts Claude Code inside `REPO_DIR`, sends the prompt on stdin, and waits for at most `TIMEOUT_S`. **This is where control leaves our code.** Claude reads files in the target repo for about 12 turns and about 50 s.
-6. Three ways out:
-   - `probe.py:75` timeout: print to stderr, exit 1. **Everything Claude did is lost** (see findings: step 04 will use `--session-id` + stream-json).
-   - `probe.py:79` Claude failed: print its stderr, exit with its code.
-   - success: `probe.py:83` parses the envelope, `:84` saves it whole to `out/probe-424.json`, and `:86` prints `structured_output` (the schema-shaped answer).
-7. Nothing checks whether the answer is true. A made-up line number passes straight through. Step 03 closes that gap.
+## What the 2026-10-11 session touched
 
-## Step 02: collect (planned, code given in chat 2026-10-10, not yet typed)
-
-`python -m gate.collect owner/name`, then:
-
-1. `gate/db.py` `connect()`: open Postgres at `DATABASE_URL`, create the `issues`, `prs` and `pr_files` tables if they're missing.
-2. `gh issue list`: upsert into `issues`, and delete rows for issues no longer open.
-3. `gh pr list`: upsert into `prs`, and delete closed PRs (their `pr_files` rows go too, through `ON DELETE CASCADE`).
-4. Then one `gh api repos/…/pulls/N/files` call per PR: replace that PR's rows in `pr_files`, committing after each PR.
-
-## What this session touched (2026-10-10)
-
-- Built: `pyproject.toml`, `gate/__init__.py`, `gate/probe.py`, `vendor/hiring-agent` (a local clone at `e0ece80`), `out/issue-424.json`, `out/probe-424.json`.
-- Designed, not yet written: `gate/db.py`, `gate/collect.py` (Postgres).
-- Docs: `docs/decisions.md` (Postgres entry), `PLAN.md` (status, step 04 "Done" condition, step 05 limit), `findings.md`, superseded banners on both explainer pages, this file.
+- Steps 04 (Deepak typed it; Claude fixed the trailing comma in `db.py` and the `-"--resume"` bug), 05 and 06 (Claude wrote them after Deepak's "go").
+- `run_claude()` gained `schema` and `tools` parameters and now passes `--tools` instead of `--allowedTools`.
+- New tables `investigations`, `pr_verdicts`; new modules `gate/candidates.py`, `gate/packet.py`, `gate/templates/`.
+- `docs/packets/424-score-swing.md` corrected (#415 fixes, #242 partly).
 
 ## Known gaps in this trace
 
-- `investigate.py`, `check.py`, `candidates.py`, `packet.py` and `cli.py` don't exist. Their part of the path is the plan, not traced code.
-- How `claude -p` chooses which files to read is inside Claude Code, which we can't trace. We only see its output (and, from step 04, its stream of events).
+- How `claude -p` decides which files to read happens inside Claude Code; we only see its event log.
+- A `RuntimeError` from `run_claude()` (Claude crashed) stops the program before `save()`, so no row records it.
+- Step 07's single entry point (`gate.cli`) does not exist yet; today it is four commands.

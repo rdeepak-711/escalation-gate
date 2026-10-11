@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escalation packet {{ id }}</title>
+<style>
+  :root { --bg:#fbfaf7; --card:#fff; --ink:#1d1d1b; --muted:#6b6b66; --line:#e6e3dc;
+          --ok:#1f7a4d; --ok-bg:#e7f4ec; --bad:#b3261e; --bad-bg:#fbe9e7; --mid:#8a5a00; --mid-bg:#fdf2dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:1.5rem; line-height:1.3; margin:0 0 8px; }
+  h2 { font-size:1.1rem; margin:36px 0 12px; padding-top:16px; border-top:1px solid var(--line); }
+  .meta { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:12px 0; }
+  .rec { border-left:4px solid var(--ok); }
+  .none { border-left:4px solid var(--mid); }
+  .note { color:var(--muted); font-size:.92rem; }
+  .scroll { overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--card); }
+  table { border-collapse:collapse; width:100%; min-width:640px; font-size:.92rem; }
+  th, td { text-align:left; vertical-align:top; padding:10px 12px; border-bottom:1px solid var(--line); }
+  th { background:#f3f1ec; font-weight:600; }
+  tr:last-child td { border-bottom:0; }
+  code { font:.86rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background:#f3f1ec; padding:1px 4px; border-radius:4px; word-break:break-word; }
+  .tag { display:inline-block; padding:1px 8px; border-radius:999px; font-size:.8rem; font-weight:600; white-space:nowrap; }
+  .fixes, .clean, .yes { background:var(--ok-bg); color:var(--ok); }
+  .partly, .unknown { background:var(--mid-bg); color:var(--mid); }
+  .no, .conflicts, .fail { background:var(--bad-bg); color:var(--bad); }
+  .muted { color:var(--muted); }
+  ol { padding-left:22px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>{{ title }}</h1>
+  <p class="meta"><code>{{ repo }}</code> at <code>{{ commit }}</code> · investigation {{ id }} ({{ status }}, {{ created }}) · investigation cost ${{ "%.2f"|format(cost) }} · prepared by escalation-gate</p>
+
+  <h2>Summary</h2>
+  <div class="card">
+    <p>{{ report.cause }}</p>
+    <p class="note">Confidence: {{ report.confidence }}.</p>
+  </div>
+  {% if recommended %}
+  <div class="card rec"><strong>Recommended: merge #{{ recommended.pr }}</strong> ({{ recommended.title }}). It was judged to fix the cause from its diff, not run, and it merges clean.</div>
+  {% else %}
+  <div class="card none"><strong>No open PR was found that fixes this cause and merges clean.</strong></div>
+  {% endif %}
+  <p class="note">Open PRs judged: {{ verdicts|length }} ({{ counts.fixes }} fix, {{ counts.partly }} partly, {{ counts.no }} don't).</p>
+
+  <h2>How to reproduce</h2>
+  <ol>{% for step in report.repro %}<li>{{ step }}</li>{% endfor %}</ol>
+
+  <h2>Root cause</h2>
+  <p class="note">Every citation was checked against the code at <code>{{ commit }}</code>: the file exists, the line exists, and the quote is on that line (±5 lines). The reasoning that links them is the model's and is <strong>not</strong> checked.</p>
+  <div class="scroll"><table>
+    <tr><th></th><th>Location</th><th>Quote</th><th>Why it matters</th></tr>
+    {% for e in report.evidence %}
+    <tr><td><span class="tag {{ 'yes' if e.checked else 'fail' }}">{{ "checked" if e.checked else "failed" }}</span></td>
+        <td><code>{{ e.file }}:{{ e.line }}</code></td><td><code>{{ e.quote }}</code></td><td>{{ e.why }}</td></tr>
+    {% endfor %}
+  </table></div>
+
+  <h2>Open PRs checked against this cause</h2>
+  {% if verdicts %}
+  <p class="note">Each verdict is judged from the diff, not run. Merge status is a real <code>git merge-tree</code> check against <code>{{ commit }}</code>.</p>
+  {% if competing|length > 1 %}<div class="card">{{ competing|joined }} all change the cause. Once one is merged, the others duplicate it.</div>{% endif %}
+  <div class="scroll"><table>
+    <tr><th>PR</th><th>Verdict</th><th>Merge</th><th>Why</th><th>Shortlisted because</th></tr>
+    {% for v in verdicts %}
+    <tr><td><a href="https://github.com/{{ repo }}/pull/{{ v.pr }}">#{{ v.pr }}</a> {{ v.title }}<br><span class="muted">by {{ v.author }}</span></td>
+        <td><span class="tag {{ v.verdict }}">{{ v.verdict }}</span></td>
+        <td>{% if v.merge %}<span class="tag {{ v.merge }}">{{ merge_label[v.merge] }}</span>{% else %}<span class="muted">not checked</span>{% endif %}</td>
+        <td>{{ v.why }}</td><td class="muted">{{ v.reasons|join(", ") }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <p>No open PR changes a cited line or mentions the issue.</p>
+  {% endif %}
+
+  <h2>Limits of this packet</h2>
+  <ul>
+    <li>Citations are checked against the code. The explanation that links them, and any claim about outside systems (APIs, libraries), is the model's reasoning and is not checked.</li>
+    <li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+    <li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers have drifted, is missed, so this is not proof that no other PR fixes it.</li>
+  </ul>
+</main>
+</body>
+</html>

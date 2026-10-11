@@ -1,0 +1,55 @@
+# {{ title }}
+
+**Repo:** `{{ repo }}` at `{{ commit }}` · **Investigation:** {{ id }} ({{ status }}, {{ created }}) · **Investigation cost:** ${{ "%.2f"|format(cost) }} · **Prepared by:** escalation-gate
+
+## Summary
+
+{{ report.cause }}
+
+**Confidence:** {{ report.confidence }}.
+{% if recommended %}
+**Recommended:** merge #{{ recommended.pr }} ("{{ recommended.title }}"). It was judged to fix the cause from its diff, not run, and it merges clean.
+{% else %}
+**No open PR was found that fixes this cause and merges clean.**
+{% endif %}
+Open PRs judged: {{ verdicts|length }} ({{ counts.fixes }} fix, {{ counts.partly }} partly, {{ counts.no }} don't).
+
+## How to reproduce
+
+{% for step in report.repro %}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+
+## Root cause
+
+Every citation below was checked against the code at `{{ commit }}`: the file exists, the line exists, and the quote is on that line (±5 lines). The reasoning that links them is the model's and is **not** checked.
+
+| | Location | Quote | Why it matters |
+|---|---|---|---|
+{% for e in report.evidence %}
+| {{ "✅" if e.checked else "❌" }} | `{{ e.file }}:{{ e.line }}` | `{{ e.quote|cell }}` | {{ e.why|cell }} |
+{% endfor %}
+
+## Open PRs checked against this cause
+
+{% if verdicts %}
+Each verdict is judged from the diff, not run. Merge status is a real `git merge-tree` check against `{{ commit }}`.
+{% if competing|length > 1 %}
+
+{{ competing|joined }} all change the cause. Once one is merged, the others duplicate it.
+{% endif %}
+
+| PR | Verdict | Merge | Why | Shortlisted because |
+|---|---|---|---|---|
+{% for v in verdicts %}
+| #{{ v.pr }} {{ v.title|cell }} | **{{ v.verdict }}** | {{ merge_label[v.merge] }} | {{ v.why|cell }} | {{ v.reasons|join(", ")|cell }} |
+{% endfor %}
+{% else %}
+No open PR changes a cited line or mentions the issue.
+{% endif %}
+
+## Limits of this packet
+
+- Citations are checked against the code. The explanation that links them, and any claim about outside systems (APIs, libraries), is the model's reasoning and is not checked.
+- PR verdicts are judged from the diff, not run. No PR was applied or tested.
+- PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers have drifted, is missed, so this is not proof that no other PR fixes it.
