@@ -2,7 +2,7 @@
 
 Give it a GitHub repo and one issue (or a symptom in plain words). It produces an **escalation packet**: the root cause with every code citation checked, steps to reproduce, and which open pull requests already fix it, each with a real merge check.
 
-**Live demo:** [escalation-gate-lemon.vercel.app](https://escalation-gate-lemon.vercel.app) (with a real packet for hiring-agent #424).
+**Live demo:** [escalation-gate-rdeepak.vercel.app](https://escalation-gate-rdeepak.vercel.app) (with a real packet for hiring-agent #424).
 
 It is built for the moment a bug report lands on a busy repo: an engineer wants to know *is this real, where is it, and has someone already fixed it?* without reading 200 open PRs.
 
