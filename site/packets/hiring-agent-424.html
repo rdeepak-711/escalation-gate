@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #424 · escalation packet · interviewstreet/hiring-agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373;
+    --line:#e5e5e5; --code-bg:#f5f5f5;
+    --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0;
+    --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
+    --red:#9f1239; --red-bg:#fff1f2; --red-line:#fecdd3; --red-edge:#e11d48;
+    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 var(--sans); }
+  a { color:inherit; }
+  /* navigation: one sticky bar across the top */
+  nav { position:sticky; top:0; z-index:10; background:rgba(255,255,255,.96); border-bottom:1px solid var(--line);
+        backdrop-filter:blur(6px); }
+  nav .bar { max-width:1200px; margin:0 auto; padding:10px 32px; display:flex; align-items:center; gap:24px; }
+  nav .who { display:flex; gap:10px; align-items:baseline; flex-shrink:0; }
+  nav .repo { font-size:13px; color:var(--muted); }
+  nav .issue { font-weight:600; color:var(--ink); font-size:14px; }
+  nav ul { list-style:none; margin:0 0 0 auto; padding:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+  nav li { flex-shrink:0; }
+  nav a { display:block; padding:5px 10px; border-radius:6px; text-decoration:none; color:var(--soft); font-size:14px; }
+  nav a:hover { background:#f5f5f5; color:var(--ink); }
+  nav a.active { background:#f0f0f0; color:var(--ink); font-weight:500; }
+
+  main { padding:32px 32px 80px; }
+  .page { max-width:1200px; margin:0 auto; }
+  section { scroll-margin-top:72px; margin-top:40px; }
+  h1 { font-size:26px; line-height:1.3; color:var(--ink); margin:0 0 8px; letter-spacing:-.01em; overflow-wrap:break-word; }
+  h2 { font-size:17px; color:var(--ink); margin:0 0 6px; }
+  .meta { color:var(--soft); font-size:14px; padding-bottom:24px; border-bottom:1px solid var(--line); }
+  .intro { color:var(--soft); font-size:14px; margin:0 0 12px; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-top:10px; }
+  .verdict { border:2px solid var(--ink); padding:20px 22px; margin-top:28px; }
+  .verdict.none { border-color:var(--amber-line); background:var(--amber-bg); }
+  .verdict h3 { font-size:18px; margin:0; color:var(--ink); }
+  .verdict .sub { color:var(--soft); font-size:14px; margin:4px 0 0; }
+  .verdict .counts { border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:14px; color:var(--soft); }
+  .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .pills { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; flex-shrink:0; }
+
+  .pill { display:inline-block; padding:1px 8px; border-radius:4px; font-size:13px; font-weight:500; border:1px solid; white-space:nowrap; }
+  .pill.green { background:var(--green-bg); color:var(--green); border-color:var(--green-line); }
+  .pill.amber { background:var(--amber-bg); color:var(--amber); border-color:var(--amber-line); }
+  .pill.red { background:var(--red-bg); color:var(--red); border-color:var(--red-line); }
+  .pill.grey { background:#f5f5f5; color:var(--soft); border-color:var(--line); }
+
+  details summary { cursor:pointer; color:var(--ink); font-size:14px; text-decoration:underline; text-underline-offset:3px; margin-top:10px; list-style:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details[open] summary { margin-bottom:8px; }
+
+  ol.steps { margin:0; padding-left:22px; }
+  ol.steps li { margin:6px 0; padding-left:4px; }
+  ol.steps li::marker { font-weight:600; color:var(--muted); }
+
+  .loc { font:500 14px/1.4 var(--mono); color:var(--ink); overflow-wrap:anywhere; }
+  .quote { background:var(--code-bg); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin:10px 0 8px;
+           font:13px/1.5 var(--mono); color:var(--ink); white-space:pre-wrap; overflow-wrap:break-word; }
+  .why { font-size:14px; color:var(--text); margin:0; }
+  .card.failed { border-left:3px solid var(--red-edge); }
+
+  .note { background:#f5f5f5; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:14px; margin-top:4px; }
+  .pr.recommended { border:2px solid var(--ink); }
+  .pr .title { font-weight:500; color:var(--ink); }
+  .pr .title a { text-decoration:none; }
+  .pr .title a:hover { text-decoration:underline; }
+  .pr .by { color:var(--muted); font-size:14px; }
+  .pr .why { margin-top:6px; }
+  .pr .because { font:12px/1.5 var(--mono); color:var(--muted); margin-top:8px; overflow-wrap:anywhere; }
+  .fold { background:var(--card); border:1px solid var(--line); border-radius:8px; margin-top:10px; padding:12px 18px; }
+  .fold > summary { margin:0; text-decoration:none; display:flex; justify-content:space-between; }
+  .fold > summary .show { text-decoration:underline; text-underline-offset:3px; }
+  .fold .pr { border:0; border-top:1px solid var(--line); border-radius:0; padding:12px 0 0; margin-top:12px; }
+
+  .limits ul { margin:6px 0 0; padding-left:20px; font-size:14px; }
+  .limits li { margin:6px 0; }
+
+  .tiles { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:16px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .tile .big { font-size:24px; font-weight:600; color:var(--ink); line-height:1.2; }
+  .tile .small { font-size:13px; color:var(--soft); margin-top:4px; }
+
+  .flow { display:grid; grid-template-columns:repeat(3, 1fr); gap:28px 30px; margin-top:12px; counter-reset:step; }
+  .flow .box { position:relative; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .flow .box.last { border:2px solid var(--ink); }
+  .flow .box.failed { border-color:var(--red-edge); }
+  .flow .box .top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+  .flow .box .loc { font-size:12px; }
+  .flow .box .label { font-weight:600; color:var(--ink); font-size:14px; margin-top:6px; }
+  .flow .box .num { font-size:12px; color:var(--muted); }
+  .flow .box:not(:last-child):not(:nth-child(3n))::after { content:"→"; position:absolute; right:-23px; top:50%;
+       transform:translateY(-50%); color:var(--muted); font-size:16px; }
+  .flow .step { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+       background:var(--ink); color:#fff; font-size:12px; font-weight:600; flex-shrink:0; }
+  .flow .box .head { display:flex; gap:8px; align-items:center; min-width:0; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .cols .card { margin-top:0; height:100%; }
+
+  .files { columns:3 340px; column-gap:14px; }
+  .files .file { break-inside:avoid; margin-bottom:14px; }
+  .whys { display:grid; grid-template-columns:repeat(auto-fit, minmax(420px, 1fr)); gap:0 14px; align-items:start; }
+  .file { background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .file > .fhead { display:flex; justify-content:space-between; gap:8px; padding:10px 14px; background:#fafafa; border-bottom:1px solid var(--line); }
+  .file > .fhead .loc { font-size:13px; }
+  .file .cite { padding:12px 14px; border-top:1px solid var(--line); }
+  .file .cite:first-of-type { border-top:0; }
+  .file .cite.failed { border-left:3px solid var(--red-edge); }
+  .file .cite .quote { margin:8px 0 6px; }
+  .count { font-size:12px; color:var(--soft); background:#f0f0f0; border-radius:999px; padding:1px 8px; white-space:nowrap; flex-shrink:0; }
+
+  .funnel { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:12px 0 16px; }
+  .funnel .stage { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:14px; position:relative; }
+  .funnel .stage b { display:block; font-size:20px; color:var(--ink); }
+  .funnel .stage.end { background:var(--green-bg); border-color:var(--green-line); }
+  .funnel .stage.end.none { background:var(--amber-bg); border-color:var(--amber-line); }
+
+  .board { display:grid; grid-template-columns:90px 1fr 1fr; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--card); }
+  .board > div { padding:10px; border-top:1px solid var(--line); border-left:1px solid var(--line); }
+  .board > .h { font-size:12px; font-weight:600; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; background:#fafafa; }
+  .board > .h.row { display:flex; align-items:center; }
+  .board > div:nth-child(-n+3) { border-top:0; }
+  .board > div:nth-child(3n+1) { border-left:0; }
+  .board .empty { color:var(--muted); text-align:center; }
+  .mini { border:1px solid var(--line); border-radius:6px; padding:8px 10px; margin-bottom:8px; font-size:14px; }
+  .mini:last-child { margin-bottom:0; }
+  .mini.recommended { border:2px solid var(--ink); }
+  .mini .by { color:var(--muted); font-size:12px; }
+  .mini a { text-decoration:none; color:var(--ink); font-weight:500; }
+  .mini a:hover { text-decoration:underline; }
+  .detail-head { font-size:14px; font-weight:600; color:var(--ink); margin:20px 0 0; }
+
+  @media (max-width: 960px) {
+    .tiles { grid-template-columns:repeat(2, 1fr); }
+  }
+
+  @media (max-width: 760px) {
+    nav .bar { flex-direction:column; align-items:stretch; gap:6px; padding:10px 16px 6px; }
+    nav .who { justify-content:space-between; }
+    nav ul { margin:0; }
+    nav a { padding:4px 10px; font-size:13px; }
+    .whys { grid-template-columns:1fr; }
+    main { padding:24px 16px 64px; }
+    h1 { font-size:21px; }
+    section { scroll-margin-top:100px; }
+    .row { flex-direction:column; gap:8px; }
+    .pills { justify-content:flex-start; }
+    .verdict { padding:16px; }
+    .cols { grid-template-columns:1fr; }
+    .flow { grid-template-columns:1fr; gap:22px; }
+    .flow .box:not(:last-child):not(:nth-child(3n))::after,
+    .flow .box:nth-child(3n):not(:last-child)::after { content:"↓"; position:absolute; right:auto; left:50%; top:auto;
+       bottom:-21px; transform:none; color:var(--muted); font-size:16px; }
+    .funnel { grid-template-columns:1fr 1fr; }
+    .board { grid-template-columns:1fr; }
+    .board > div { border-left:0 !important; }
+    .board > .h.col, .board > .corner { display:none; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="bar">
+    <div class="who"><span class="issue">Issue #424</span><span class="repo">interviewstreet/hiring-agent</span></div>
+    <ul>
+      <li><a href="#verdict">Verdict</a></li>
+<li><a href="#breaks">How it breaks</a></li>      <li><a href="#overview">What's wrong</a></li>
+      <li><a href="#cause">Evidence</a></li>
+      <li><a href="#prs">Pull requests</a></li>
+      <li><a href="#limits">Limits</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main><div class="page">
+    <header>
+      <h1>Issue #424: GitHub enrichment: project_type and contributor counts never reach the evaluator</h1>
+      <div class="meta">interviewstreet/hiring-agent · commit e0ece80 · investigation <span class="pill green">verified</span> · 2026-10-11 · investigation cost $0.11</div>
+    </header>
+
+    <section id="verdict" style="margin-top:0">
+      <div class="card verdict">
+        <div class="row">
+          <div>
+            <h3>Recommended: merge #425</h3>
+            <p class="sub">GitHub enrichment: pass project_type and contributor counts through to the evaluator</p>
+          </div>
+          <div class="pills">
+            <span class="pill green">Fixes the cause · judged from diff</span>
+            <span class="pill green">Merges clean · git check</span>
+          </div>
+        </div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="big">6/6</div><div class="small">citations verified in code</div></div>
+        <div class="tile"><div class="big">192 → 25</div><div class="small">open PRs shortlisted by cited lines</div></div>
+        <div class="tile"><div class="big">2 fix</div><div class="small">1 merge clean · 3 partly</div></div>
+        <div class="tile"><div class="big">$0.11</div><div class="small">investigation cost</div></div>
+      </div>
+    </section>
+
+    <section id="breaks">
+      <h2>How it breaks</h2>
+      <p class="intro">The path is the model's reasoning. Each box is a citation checked against the code.</p>
+      <div class="flow">
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">1</span><span class="loc" title="github.py:246">github.py:246</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">project_type computed in github.py</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">2</span><span class="loc" title="github.py:352">github.py:352</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">Fields passed to selection LLM as input</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">3</span><span class="loc" title="prompts/templates/github_project_selection.jinja:81">github_project_selection.jinja:81</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">Output schema omits project_type/contributor_count</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">4</span><span class="loc" title="github.py:411">github.py:411</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">LLM objects used without re-attaching fields</div>
+        </div>
+        <div class="box">
+          <div class="top">
+            <span class="head"><span class="step">5</span><span class="loc" title="transform.py:897">transform.py:897</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">Evaluator text omits type and counts</div>
+        </div>
+        <div class="box last">
+          <div class="top">
+            <span class="head"><span class="step">6</span><span class="loc" title="roles/software_engineering_intern/criteria.jinja:61">criteria.jinja:61</span></span>
+<span class="pill green">✓</span>          </div>
+          <div class="label">Rubric rule on project_type cannot fire</div>
+<div class="num">where it shows</div>        </div>
+      </div>
+    </section>
+
+    <section id="overview">
+      <div class="cols">
+        <div class="card" id="wrong">
+          <h2>What's wrong</h2>
+          The classification is computed in github.py but is lost twice before it reaches the evaluator. First, the selection LLM receives project_type and contributor_count as input, but the prompt&#39;s required JSON output schema omits them.
+          <details><summary>Show full explanation</summary>The code then uses the model&#39;s returned objects directly and never re-attaches the computed fields. Second, transform.convert_github_data_to_text never prints project_type, contributor_count or author_commit_count. The rubric rules that depend on project_type therefore cannot fire, and the evaluator has to guess the type from the description. The report&#39;s claim about criteria.jinja is confirmed (line 61). The system_message.jinja claim was only partly checked: grep shows project_type on lines 24 and 71, but I did not read those lines.</details>
+          <div class="intro" style="margin:10px 0 0">Model confidence: high.</div>
+        </div>
+        <div class="card" id="reproduce">
+          <h2>How to reproduce</h2>
+          <ol class="steps"><li>Run the pipeline with Ollama qwen3:8b on a GitHub profile whose top repo has more than one human contributor and at least 4 commits by the candidate.</li><li>In github.py, print selected_projects right after json.loads (around line 403). The dicts only have the keys from the template&#39;s output schema, with no project_type or contributor_count.</li><li>Call transform.convert_github_data_to_text on the result, or print the evaluator prompt. Each project shows only name, description, URL, stars, forks and language.</li><li>The evaluator has no type information, so the rule at criteria.jinja line 61 (all projects &#39;self_project&#39;) gets applied from a guess.</li><li>To confirm a fix, re-attach the computed fields by repo name after selection and print a Type line in convert_github_data_to_text.</li></ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="cause">
+      <h2>Evidence</h2>
+      <p class="intro">Each citation was checked against the code at e0ece80.</p>
+      <div class="files">
+        <div class="file">
+          <div class="fhead"><span class="loc">github.py</span><span class="count">3 citations</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 246</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">project_type = (</div>
+            <p class="why">Project type is computed per repo (open_source if contributor_count &gt; 1, else self_project). The counts are stored at lines 259-260.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 352</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">&#34;project_type&#34;: project.get(&#34;project_type&#34;, &#34;self_project&#34;),</div>
+            <p class="why">The fields are sent to the selection LLM as input, so they exist before selection.</p>
+          </div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 411</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">unique_projects.append(project)</div>
+            <p class="why">The LLM-returned project objects are used as-is. Nothing re-attaches project_type or contributor_count from the original data. Only the fallback path at line 424 keeps them.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">prompts/templates/github_project_selection.jinja</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 81</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">&#34;author_commit_count&#34;: 0,</div>
+            <p class="why">The output schema (lines 73-98) has author_commit_count and total_commit_count but no project_type or contributor_count, so the model is told to return objects without them.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">transform.py</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 897</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">github_text += f&#34;   URL: {project.get(&#39;github_url&#39;, &#39;N/A&#39;)}\n&#34;</div>
+            <p class="why">The evaluator text for each project (lines 895-902) prints name, description, URL, stars, forks and language. It never prints project_type, contributor_count or author_commit_count.</p>
+          </div>
+        </div>
+        <div class="file">
+          <div class="fhead"><span class="loc">roles/software_engineering_intern/criteria.jinja</span><span class="count">1 citation</span></div>
+          <div class="cite">
+            <div class="row">
+              <span class="loc">line 61</span>
+              <div class="pills"><span class="pill green">verified in code</span></div>
+            </div>
+            <div class="quote">When GitHub data shows all projects are &#39;self_project&#39; type, open source score MUST be 10 points or less</div>
+            <p class="why">The rubric depends on a project_type value that the evaluator text never contains.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="prs">
+      <h2>Pull requests</h2>
+      <p class="intro">Verdicts are judged from the diff, not run. Merge status is a real git check against e0ece80.</p>
+      <div class="funnel">
+<div class="stage"><b>192</b>open PRs</div>        <div class="stage"><b>25</b>change a cited line or mention the issue</div>
+        <div class="stage"><b>5</b>change the cause</div>
+        <div class="stage end"><b>1</b>fixes and merges clean</div>
+      </div>
+<div class="note">#415, #425, #242, #414 and #462 all change the cause. Once one is merged, the others duplicate it.</div>      <div class="board" style="margin-top:12px">
+        <div class="h corner"></div><div class="h col">Merges clean</div><div class="h col">Conflicts or unknown</div>
+        <div class="h row">Fixes</div>
+        <div>
+          <div class="mini recommended">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+<span class="pill green">recommended</span>              <span class="pill green">Fixes</span>
+              <span class="pill green">Merges clean</span>
+            </div>
+            <a href="#pr-425">#425 · GitHub enrichment: pass project_type and contributor counts through to the evaluator</a> <span class="by">by Pieismath</span>
+          </div>
+        </div>
+        <div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill green">Fixes</span>
+              <span class="pill red">Conflicts</span>
+            </div>
+            <a href="#pr-415">#415 · feat: add AWS Bedrock provider transport</a> <span class="by">by sairam0424</span>
+          </div>
+        </div>
+        <div class="h row">Partly</div>
+        <div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill amber">Partly</span>
+              <span class="pill green">Merges clean</span>
+            </div>
+            <a href="#pr-242">#242 · fix: validate LLM bonus claims and reject hallucinated GitHub projects</a> <span class="by">by Zem-0</span>
+          </div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill amber">Partly</span>
+              <span class="pill green">Merges clean</span>
+            </div>
+            <a href="#pr-414">#414 · Add function to fetch PR contributed repositories</a> <span class="by">by RajShree1854</span>
+          </div>
+          <div class="mini">
+            <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
+              <span class="pill amber">Partly</span>
+              <span class="pill green">Merges clean</span>
+            </div>
+            <a href="#pr-462">#462 · feat: add ensemble scoring to mitigate LLM non-determinism</a> <span class="by">by codesbysaravana</span>
+          </div>
+        </div>
+        <div>
+<div class="empty">—</div>        </div>
+      </div>
+      <div class="detail-head">Why each verdict</div>
+      <div class="whys">
+      <div class="card pr" id="pr-415">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/415">#415 · feat: add AWS Bedrock provider transport</a></span> <span class="by">by sairam0424</span></div>
+          <div class="pills">
+            <span class="pill green">Fixes</span>
+            <span class="pill red">Conflicts</span>
+          </div>
+        </div>
+        <p class="why">`resolve_selected_projects` rebuilds each selected project from the fetched data (keeping project_type and contributor_count), and transform.py now prints Project Type, Contributors and Author Commits.</p>
+        <div class="because">Shortlisted because: changes github.py:411, changes transform.py:897</div>
+      </div>
+      <div class="card pr recommended" id="pr-425">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/425">#425 · GitHub enrichment: pass project_type and contributor counts through to the evaluator</a></span> <span class="by">by Pieismath</span></div>
+          <div class="pills">
+            <span class="pill green">Fixes</span>
+            <span class="pill green">Merges clean</span>
+          </div>
+        </div>
+        <p class="why">`restore_repo_metadata()` re-attaches project_type/contributor_count/commit counts right after the selection JSON is parsed, and `convert_github_data_to_text` now prints a Type line with contributors and author commits, so both losses are closed.</p>
+        <div class="because">Shortlisted because: mentions the issue, changes transform.py:897</div>
+      </div>
+      <div class="card pr" id="pr-242">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/242">#242 · fix: validate LLM bonus claims and reject hallucinated GitHub projects</a></span> <span class="by">by Zem-0</span></div>
+          <div class="pills">
+            <span class="pill amber">Partly</span>
+            <span class="pill green">Merges clean</span>
+          </div>
+        </div>
+        <p class="why">It swaps the LLM&#39;s project copies for authoritative `valid_by_name` records (restoring the fields), but transform.py is unchanged so the evaluator text still never prints them.</p>
+        <div class="because">Shortlisted because: changes github.py:411</div>
+      </div>
+      <div class="card pr" id="pr-414">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/414">#414 · Add function to fetch PR contributed repositories</a></span> <span class="by">by RajShree1854</span></div>
+          <div class="pills">
+            <span class="pill amber">Partly</span>
+            <span class="pill green">Merges clean</span>
+          </div>
+        </div>
+        <p class="why">It pins up to three open_source projects taken from `projects_data` (fields intact), but the remaining projects are still the LLM&#39;s objects and transform.py still doesn&#39;t print the fields.</p>
+        <div class="because">Shortlisted because: changes github.py:411</div>
+      </div>
+      <div class="card pr" id="pr-462">
+        <div class="row">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/462">#462 · feat: add ensemble scoring to mitigate LLM non-determinism</a></span> <span class="by">by codesbysaravana</span></div>
+          <div class="pills">
+            <span class="pill amber">Partly</span>
+            <span class="pill green">Merges clean</span>
+          </div>
+        </div>
+        <p class="why">It adds Project Type, Contributors and Author Commits to the evaluator text, but github.py is untouched, so LLM-selected projects still lack those fields and would print as N/A.</p>
+        <div class="because">Shortlisted because: changes transform.py:897</div>
+      </div>
+      </div>
+      <details class="fold">
+        <summary><span>20 PRs that don't fix it</span><span class="show">Show</span></summary>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/11">#11 · fix: GitHub API reliability: encoding issues, retry logic, rate limit handling, and undefined variables #9</a></span> <span class="by">by DhanushShettyH</span></div>
+          <p class="why">It adds retry and rate-limit handling to the GitHub API fetch and leaves selection and evaluator text unchanged.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/13">#13 · Fix critical GitHub API issues: undefined variables, #9</a></span> <span class="by">by NandhiniN0506</span></div>
+          <p class="why">It only adds API retry, logging and error-handling fixes in github.py; the selection output and transform.py are unchanged.</p>
+          <div class="because">Shortlisted because: changes github.py:246, changes github.py:352, changes github.py:411</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/34">#34 · fix: robust cache file handling for encoding errors</a></span> <span class="by">by dhriti-exe</span></div>
+          <p class="why">It only changes cache-file encoding and error handling.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/50">#50 · feat: PR based open source contribution detection</a></span> <span class="by">by RNAdvani</span></div>
+          <p class="why">It changes how project_type is computed and extends the output schema with PR fields, but the schema still omits project_type/contributor_count and transform.py prints neither.</p>
+          <div class="because">Shortlisted because: changes github.py:246, changes github.py:352, changes github.py:411, changes prompts/templates/github_project_selection.jinja:81</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/54">#54 · fix: Resolve dead code and improve logging in github.py (Fixes #46, #37)</a></span> <span class="by">by Vanshika-d25</span></div>
+          <p class="why">It tidies logging and the `fetch_repo_contributors` return path and does not touch selection output or evaluator text.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/60">#60 · Enhance Output Formatting and Readability</a></span> <span class="by">by deepakstwt</span></div>
+          <p class="why">It changes console output wording and an undefined variable and does nothing about field loss or evaluator text.</p>
+          <div class="because">Shortlisted because: changes github.py:246, changes github.py:411</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/69">#69 · Fix: Add robust error handling for JSON parsing in extract_json_from_response</a></span> <span class="by">by deepakstwt</span></div>
+          <p class="why">It adds a None guard for malformed JSON and does not re-attach any fields or change evaluator text.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/83">#83 · Feat: New pipeline to recognize merged open source contributions to organisations</a></span> <span class="by">by ppl-call-me-tima</span></div>
+          <p class="why">It adds a separate open-source-contributions pipeline and leaves the selection output and the per-project text without project_type or contributor counts.</p>
+          <div class="because">Shortlisted because: changes github.py:246, changes github.py:411</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/148">#148 · fix: resolve NameError for undefined &#39;response&#39; variable in github.py</a></span> <span class="by">by Santu-kumar364</span></div>
+          <p class="why">It fixes the undefined `response` NameError and the contributors return type, not the field loss.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/165">#165 · Correctly fetch and display parent repo stats for forks</a></span> <span class="by">by saishmungase</span></div>
+          <p class="why">It changes fork stats to come from the parent repo and does not address field loss after selection or the evaluator text.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/176">#176 · Improve robustness, scoring, and DX: CLI flags, Live Demo recognition, rate-limit handling, cache validation, docs/ignoresfeat(cli): add --force/--no-github/--max-workers; feat(projects): cap…</a></span> <span class="by">by abhiram050904</span></div>
+          <p class="why">It adds Repo URL and Live Demo lines to the text and upstream fork details, but still prints no project_type, contributor_count or author commits.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/178">#178 · Integrate Codeforces profile scoring and bonus points</a></span> <span class="by">by pranjal1codes</span></div>
+          <p class="why">It adds Codeforces/LeetCode scoring and fork handling, and the project text block still omits the classification fields.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/329">#329 · fix: resolve LLM hallucination of bonus points and GitHub repos (#240)</a></span> <span class="by">by harshil-1402</span></div>
+          <p class="why">Its whitelist only filters by name and still returns the LLM&#39;s echoed objects without project_type, and transform.py is untouched.</p>
+          <div class="because">Shortlisted because: changes github.py:411</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/376">#376 · fix: detect merged PRs to externally-owned repos for open source scoring</a></span> <span class="by">by janampatel</span></div>
+          <p class="why">It adds an external merged-PR section to the text and relaxes the rubric rule, but leaves project_type unprinted and still lost after selection.</p>
+          <div class="because">Shortlisted because: changes roles/software_engineering_intern/criteria.jinja:61</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/382">#382 · fix: correct project details handling for forked repository</a></span> <span class="by">by trishanu-init</span></div>
+          <p class="why">It changes fork metadata handling only; selection output and the project text lines are unchanged.</p>
+          <div class="because">Shortlisted because: changes github.py:246</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/394">#394 · docs(prompts): expand all template instructions with detailed extraction rules and validation</a></span> <span class="by">by ThinkerDesigns</span></div>
+          <p class="why">It rewrites prompt text, and nothing visible re-attaches fields in code or prints them in transform.py.</p>
+          <div class="because">Shortlisted because: changes prompts/templates/github_project_selection.jinja:81</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/405">#405 · fix: extracted Github project live demo URLs not being passed to LLM</a></span> <span class="by">by jlam323</span></div>
+          <p class="why">It adds only the live demo URL line to the text and not project_type, contributor_count or author_commit_count.</p>
+          <div class="because">Shortlisted because: changes transform.py:897</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/410">#410 · feat: extract and score Open Source Contributions resume sections</a></span> <span class="by">by ayushh0110</span></div>
+          <p class="why">It adds a resume-side open source contributions section and rubric text, and neither the lost fields nor the project text is changed.</p>
+          <div class="because">Shortlisted because: changes roles/software_engineering_intern/criteria.jinja:61</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/444">#444 · fix: use filtered project list in every GitHub selection fallback</a></span> <span class="by">by rajarshidattapy</span></div>
+          <p class="why">It only makes the fallback paths return the filtered `projects_data`, which already kept the fields, and leaves the success path and the evaluator text unchanged.</p>
+          <div class="because">Shortlisted because: changes github.py:352</div>
+        </div>
+        <div class="pr card">
+          <div><span class="title"><a href="https://github.com/interviewstreet/hiring-agent/pull/453">#453 · fix: neutralize forged section delimiters in GitHub/blog data (#452)</a></span> <span class="by">by Pranav-error</span></div>
+          <p class="why">It sanitizes `===` delimiters in candidate-controlled fields and adds no classification fields to the text or selection output.</p>
+          <div class="because">Shortlisted because: changes transform.py:897</div>
+        </div>
+      </details>
+    </section>
+
+    <section id="limits" class="limits">
+      <div class="card">
+        <h2>What this packet does not prove</h2>
+        <ul>
+          <li>Citations are checked against the code. The explanation that links them, the order of the chain, and any claim about outside systems (APIs, libraries) are the model's reasoning and are not checked.</li>
+          <li>PR verdicts are judged from the diff, not run. No PR was applied or tested.</li>
+          <li>PRs were shortlisted because they change a cited line or mention the issue. A fix in another file, or a PR whose line numbers have drifted, is missed, so this is not proof that no other PR fixes it.</li>
+        </ul>
+      </div>
+    </section>
+</div></main>
+<script>
+  // highlight the section currently on screen in the navigation
+  const links = [...document.querySelectorAll("nav a")];
+  const seen = new IntersectionObserver(entries => {
+    for (const entry of entries) if (entry.isIntersecting) {
+      links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id));
+    }
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  document.querySelectorAll("main section").forEach(s => seen.observe(s));
+</script>
+</body>
+</html>
