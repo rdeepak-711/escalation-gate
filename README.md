@@ -1,77 +1,99 @@
 # escalation-gate
 
-Give it a GitHub repo and one issue (or a symptom in plain words). It produces an **escalation packet**: the root cause with every code citation checked, steps to reproduce, and which open pull requests already fix it, each with a real merge check.
+**Give it a GitHub issue. It finds the root cause with every code citation checked against the source, then tells you which open pull request fixes it, and whether that PR actually merges.**
 
-**Live demo:** [escalation-gate-rdeepak.vercel.app](https://escalation-gate-rdeepak.vercel.app): real packets, a board per repo, and two short videos (what it is, and a live run).
+[Live demo](https://escalation-gate-rdeepak.vercel.app) · [Videos](https://escalation-gate-rdeepak.vercel.app/#watch) · [Example packet](https://escalation-gate-rdeepak.vercel.app/packets/hiring-agent-424.html) · [Repo board](https://escalation-gate-rdeepak.vercel.app/hiring-agent/) · [Upstream fix it found (PR #480)](https://github.com/interviewstreet/hiring-agent/pull/480)
 
-It is built for the moment a bug report lands on a busy repo: an engineer wants to know *is this real, where is it, and has someone already fixed it?* without reading 200 open PRs.
+[![The explainer video](site/video/explainer.jpg)](https://escalation-gate-rdeepak.vercel.app/#watch)
 
-## What a packet looks like
+## Why
 
-On `interviewstreet/hiring-agent` issue #424 (scores swing between runs), one command produced ([see the packet](docs/examples/packet-424.html)):
+When a bug report lands on a busy repo, a maintainer has three questions: is it real, where exactly is it, and has someone already sent a fix? HackerRank's open-source [hiring-agent](https://github.com/interviewstreet/hiring-agent) had 162 open issues and 192 open PRs. Answering those three questions for one bug took me about 1.5 hours by hand. escalation-gate does it in one command for a few cents, and writes the answer up as one page an engineer can act on in five minutes.
 
-- **Root cause:** `github.py` labels each repo `project_type`, the project-selection step drops the label, and `transform.py:897` never prints it, so the grader is told to score by a label it never sees. 7 citations, all checked against the code.
-- **Recommended:** merge #425, which was judged to fix both halves from its diff and merges clean.
-- **Also fixes it:** #415, but it conflicts and the fix is buried inside an unrelated feature PR. **Partly fixes it:** #242 and #462.
-- 192 open PRs were cut to 27 by cited lines, then judged, for about $0.40 in total on Sonnet.
+## What it found
 
-It also found a bug nobody had reported: `github.py:239` looks up contributors with the candidate as the repo owner, so team and org repos score as solo projects with zero commits. Filed upstream as [issue #479](https://github.com/interviewstreet/hiring-agent/issues/479) with the fix in [PR #480](https://github.com/interviewstreet/hiring-agent/pull/480).
+On hiring-agent issue **#424** (the same résumé scores differently between runs):
 
-I had reviewed the same issue by hand before building the tool. The tool disagreed with my review on #415, and when I checked the diff, the tool was right. It also found #242, which I had missed.
+- **Root cause, with 6 of 6 citations verified against the code:** `github.py` labels each repo `project_type`, the project-selection step drops the label, and `transform.py` never prints it, so the rubric scores by a label the grader never sees.
+- **192 open PRs → 25** that touch the cited lines (SQL, no model) → **merge #425**, which fixes the cause and merges clean. #415 also fixes it but conflicts. #242, #414 and #462 fix it partly.
+- **$0.41 in total** on Sonnet. [The packet](https://escalation-gate-rdeepak.vercel.app/packets/hiring-agent-424.html).
+
+Things it caught that I didn't expect:
+
+1. **A mistake in my own review.** Before building it, I reviewed #424 by hand and said #415 only partly fixes it. The tool said it fully fixes it. I opened the diff, and the tool was right. It also found #242, which I had missed.
+2. **A PR that would crash on merge.** On issue #476, it flagged that PR #477 removes a function parameter but leaves one caller still passing it, so merging it raises a `TypeError`. I confirmed it in the diff.
+3. **A bug nobody had reported.** `github.py` looks up contributors with the candidate as the repo owner, so team and org repos score as solo projects with zero commits (25 of 99 repos on one public profile). Filed as [#479](https://github.com/interviewstreet/hiring-agent/issues/479), fixed in [PR #480](https://github.com/interviewstreet/hiring-agent/pull/480).
+
+And one thing it got wrong: on that same bug, it claimed GitHub's API never returns org repos. That's false. It was a claim about the outside world, which the packet labels as unchecked reasoning, and that's exactly why the label exists.
 
 ## How it works
 
 ```
 collect      gh → Postgres: open issues, open PRs, every PR's diff
 investigate  Claude Code, read-only (Read/Grep/Glob), finds the cause and cites file:line:quote
-check        every citation is verified against the code; on failure, one retry in the same session
-shortlist    keep PRs whose diff changes a cited line, or that mention the issue (SQL + diff hunk ranges)
+check        every citation is verified against the code; on failure, one retry in the same session, then a human
+shortlist    keep PRs whose diff changes a cited line, or that mention the issue (SQL + diff hunk ranges, no model)
 judge        one Claude call, no tools, diffs in the prompt: fixes / partly / no, with one reason each
 packet       citations re-checked, git merge-tree per candidate PR, Markdown + HTML written
 ```
 
-## What is proven and what is opinion
+A model is used in two of the six stages. The other four exist to check its output or narrow its work.
+
+### What is proven and what is judgement
 
 | Part of the packet | Status |
 |---|---|
 | Citations (file, line, quote) | **Checked** against the code, mechanically |
 | "Merges clean" / "conflicts" | **Checked** with `git merge-tree` (a dry-run merge; nothing on disk changes) |
-| The explanation that links the citations | Model reasoning, **not** checked |
-| Claims about outside systems (e.g. GitHub API behaviour) | Model reasoning, **not** checked |
+| The explanation that links the citations, and the cause-to-symptom chain | Model reasoning, labelled as such |
+| Claims about outside systems (e.g. GitHub API behaviour) | Model reasoning, labelled as such |
 | PR verdicts (fixes / partly / no) | Judged from the diff, **not run** |
-| "No other PR fixes this" | **Not claimed.** A fix in an uncited file, or a PR whose line numbers drifted, is not shortlisted. |
+| "No other PR fixes this" | **Never claimed.** A fix in an uncited file, or a PR whose line numbers drifted, is not shortlisted. |
 
 ## Run it
 
 Needs: Python 3.11 with [uv](https://docs.astral.sh/uv/), Postgres running locally, the [GitHub CLI](https://cli.github.com/) logged in, and [Claude Code](https://claude.com/claude-code) logged in.
 
 ```bash
+git clone https://github.com/rdeepak-711/escalation-gate && cd escalation-gate
 createdb escalation_gate
 uv sync
+
+# the board: every open issue, ⬜ not investigated · ✅ verified · ⚠️ needs a human
+uv run python -m gate.cli --repo owner/name --list
+
+# investigate one issue end to end (the board updates)
 uv run python -m gate.cli --repo owner/name --issue 123
+
+# no issue number? describe what the user saw
 uv run python -m gate.cli --repo owner/name --symptom "what the user saw, in plain words"
-open out/packet-<id>.html
 ```
 
-To see every open issue with its status (⬜ not investigated, ✅ verified, ⚠️ needs a human), run `uv run python -m gate.cli --repo owner/name --list`. It prints a table and writes `site/<name>/index.html`, a board that links each investigated issue to its packet. Every `--issue` run updates the board.
+Each run prints the path of its packet (`out/packet-<id>.html`) and the board (`site/<name>/index.html`).
 
-It uses the Postgres database at `DATABASE_URL` (default `postgresql://localhost/escalation_gate`); set it to use another one. Cost is about $0.03–0.45 per issue on Sonnet, most of it the PR judging step, which is skipped when no open PR touches the cited lines.
-
-The first run on a repo clones it into `vendor/` and collects its open issues and PRs (a few minutes for a busy repo). Add `--refresh` to collect again. `--model opus` uses a stronger model for both Claude steps (about 5× the cost).
-
-Each stage can also be run alone: `gate.collect`, `gate.investigate`, `gate.candidates`, `gate.packet`.
-
-Tests (no network, no Claude, no Postgres needed): `uv run pytest -q`
+- The first run on a repo clones it into `vendor/` and collects its open issues and PRs (a few minutes for a busy repo). `--refresh` collects again.
+- It uses the Postgres database at `DATABASE_URL` (default `postgresql://localhost/escalation_gate`).
+- Cost is about **$0.03–0.45 per issue** on Sonnet. Most of it is the judging step, which is skipped when no open PR touches the cited lines. `--model opus` is stronger and about 5× the cost.
+- Each stage can also run alone: `gate.collect`, `gate.investigate`, `gate.candidates`, `gate.packet`.
+- Tests need no network, no Claude and no Postgres: `uv run pytest -q` (62 tests).
 
 ## Limits
 
-- One retry. If the citations still fail, the run is marked `needs_human` and the packet shows which citation failed.
-- Tested end to end on two unrelated repos: interviewstreet/hiring-agent and interviewstreet/spark-stratifier.
-- The PR verdicts were compared with a careful hand review on two cases only. They agreed, after the hand review was corrected. That is a sanity check, not proof that it generalises.
-- Runs vary: the same model on the same issue can go deeper one time than another. The checker catches false citations, not shallow reasoning.
+- Tested end to end on two unrelated repos: interviewstreet/hiring-agent (an LLM résumé scorer) and interviewstreet/spark-stratifier (a PySpark utility, run cold).
+- Runs vary. The same model on the same issue can search more narrowly one time than another, and a narrower search gives a narrower verdict. Borderline PR verdicts can flip between runs.
+- One retry. If citations still fail, the run is marked `needs_human` and the packet shows which citation failed.
+- The checker proves quotes, not reasoning.
+
+## Docs
+
+- [`docs/mental-model.md`](docs/mental-model.md): the whole system in plain words, stage by stage, with what each does, why, and where it breaks.
+- [`docs/flow.md`](docs/flow.md): the execution flow by function.
+- [`docs/examples/`](docs/examples/): a full packet as HTML and Markdown.
 
 ## Next (V2)
 
 Apply each "fixes" PR to a throwaway copy, run the reproduction before and after, and put the measured result in the packet. That turns "judged from the diff" into "measured".
 
-Example output: [`docs/examples/packet-424.html`](docs/examples/packet-424.html) (open it in a browser) and the same packet as [Markdown](docs/examples/packet-424.md). Execution flow by function: [`docs/flow.md`](docs/flow.md).
+---
+
+Built by [Deepak R](https://rdeepak.vercel.app) with Claude Code.
