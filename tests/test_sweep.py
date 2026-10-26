@@ -112,7 +112,7 @@ def loop(monkeypatch):
         out = outcomes.get(issue, "verified")
         if isinstance(out, BaseException):
             raise out
-        return out
+        return {"status": out, "cost": 0.5, "error": None}
 
     def stop_requested(conn, sweep_id):
         done = [c for c in calls if c[0] == "process"]
@@ -121,9 +121,10 @@ def loop(monkeypatch):
     monkeypatch.setattr(sw, "process_issue", process)
     monkeypatch.setattr(sw, "set_planned", lambda conn, sid, planned: calls.append(("planned", list(planned))))
     monkeypatch.setattr(sw, "set_current", lambda conn, sid, issue: calls.append(("current", issue)))
-    monkeypatch.setattr(sw, "record", lambda conn, sid, issue, outcome: calls.append(("record", issue, outcome)))
+    monkeypatch.setattr(sw, "record", lambda conn, sid, issue, outcome: calls.append(("record", issue, outcome["status"])))
     monkeypatch.setattr(sw, "stop_requested", stop_requested)
-    monkeypatch.setattr(sw, "finish", lambda conn, sid, status: calls.append(("finish", status)))
+    monkeypatch.setattr(sw, "finish", lambda conn, sid, status, stop_reason=None: calls.append(("finish", status, stop_reason)))
+    monkeypatch.setattr(sw, "spent", lambda conn, sid: 0.5 * len([c for c in calls if c[0] == "process"]))
     monkeypatch.setattr(sw.board, "write", lambda conn, repo: calls.append(("board", repo)))
     return calls, outcomes, stop_after
 
@@ -134,9 +135,10 @@ def test_run_processes_in_order_and_updates_the_board_after_each(loop):
     assert calls == [("planned", [5, 3]),
                      ("current", 5), ("process", 5), ("record", 5, "verified"), ("board", "o/r"),
                      ("current", 3), ("process", 3), ("record", 3, "verified"), ("board", "o/r"),
-                     ("finish", "done")]
-    assert result == {"status": "done", "finished": [{"issue": 5, "outcome": "verified"},
-                                                      {"issue": 3, "outcome": "verified"}]}
+                     ("finish", "done", None)]
+    assert result == {"status": "done", "stop_reason": None,
+                      "finished": [{"issue": 5, "outcome": "verified", "cost": 0.5, "error": None},
+                                   {"issue": 3, "outcome": "verified", "cost": 0.5, "error": None}]}
 
 
 def test_run_records_failures_and_keeps_going(loop):
@@ -154,14 +156,14 @@ def test_run_stops_between_issues_when_asked(loop):
     stop_after["n"] = 1
     result = sw.run(Conn(), "o/r", 1, [5, 3, 8], "sonnet")
     assert [c[1] for c in calls if c[0] == "process"] == [5]
-    assert calls[-1] == ("finish", "stopped")
-    assert result["status"] == "stopped"
+    assert calls[-1] == ("finish", "stopped", "requested")
+    assert result["status"] == "stopped" and result["stop_reason"] == "requested"
 
 
 def test_run_with_nothing_selected_just_finishes(loop):
     calls, _, _ = loop
     assert sw.run(Conn(), "o/r", 1, [], "sonnet")["status"] == "done"
-    assert calls == [("planned", []), ("finish", "done")]
+    assert calls == [("planned", []), ("finish", "done", None)]
 
 
 # --- review round 1: a failed issue must not poison the rest of the sweep ------------------------------------
@@ -204,3 +206,41 @@ def test_ctrl_c_is_not_swallowed(loop):
     outcomes[5] = KeyboardInterrupt()
     with pytest.raises(KeyboardInterrupt):
         sw.run(Conn(), "o/r", 1, [5, 3], "sonnet")
+
+
+# --- Tier 2: the money cap, and what a failed issue reports --------------------------------------------------
+
+def test_cost_cap_stops_between_issues(loop):
+    calls, _, _ = loop
+    result = sw.run(Conn(), "o/r", 1, [5, 3, 8], "sonnet", max_usd=1.0)  # 0.5 per issue, cap reached after 2
+    assert [c[1] for c in calls if c[0] == "process"] == [5, 3]
+    assert calls[-1] == ("finish", "stopped", "cost cap")
+    assert result["status"] == "stopped" and result["stop_reason"] == "cost cap"
+    assert len(result["finished"]) == 2
+
+
+def test_no_cap_never_stops_for_money(loop):
+    calls, _, _ = loop
+    result = sw.run(Conn(), "o/r", 1, [5, 3, 8], "sonnet", max_usd=None)
+    assert result["status"] == "done" and len(result["finished"]) == 3
+
+
+def test_one_issue_may_overrun_the_cap_because_it_is_checked_before_each_issue(loop):
+    calls, _, _ = loop
+    result = sw.run(Conn(), "o/r", 1, [5, 3], "sonnet", max_usd=0.2)
+    assert [c[1] for c in calls if c[0] == "process"] == [5]
+    assert result["stop_reason"] == "cost cap"
+
+
+def test_a_failed_issue_reports_the_error_text_and_no_cost(loop):
+    calls, outcomes, _ = loop
+    outcomes[5] = RuntimeError("claude -p exited 1: not logged in\nsecond line")
+    result = sw.run(Conn(), "o/r", 1, [5], "sonnet")
+    assert result["finished"] == [{"issue": 5, "outcome": "error", "cost": 0,
+                                  "error": "RuntimeError: claude -p exited 1: not logged in"}]
+
+
+def test_a_long_error_is_cut_to_200_characters(loop):
+    calls, outcomes, _ = loop
+    outcomes[5] = RuntimeError("x" * 500)
+    assert len(sw.run(Conn(), "o/r", 1, [5], "sonnet")["finished"][0]["error"]) == 200

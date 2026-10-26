@@ -77,6 +77,10 @@ CREATE TABLE IF NOT EXISTS sweeps (
     started_at timestamptz NOT NULL DEFAULT now(),
     finished_at timestamptz
 );
+ALTER TABLE sweeps ADD COLUMN IF NOT EXISTS max_usd double precision;
+ALTER TABLE sweeps ADD COLUMN IF NOT EXISTS cost_usd double precision NOT NULL DEFAULT 0;
+ALTER TABLE sweeps ADD COLUMN IF NOT EXISTS stop_reason text;
+ALTER TABLE investigations ADD COLUMN IF NOT EXISTS judge_cost_usd double precision NOT NULL DEFAULT 0;
 """
 
 CONSTRAINTS = {"PRIMARY", "FOREIGN", "CHECK", "UNIQUE"}

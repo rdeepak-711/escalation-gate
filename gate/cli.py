@@ -31,12 +31,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--top", type=int, help="number of top-ranked non-feature issues (1–100)")
     parser.add_argument("--issues", help="comma-separated issue numbers to sweep")
     parser.add_argument("--sweep-id", type=int, help=argparse.SUPPRESS)
+    parser.add_argument("--max-usd", type=float, help="stop the sweep once it has spent this much (0.1–50, default 2.0)")
     args = parser.parse_args(argv)
 
-    if (args.top is not None or args.issues is not None or args.sweep_id is not None) and not args.sweep:
-        parser.error("--top, --issues and --sweep-id require --sweep")
+    if (args.top is not None or args.issues is not None or args.sweep_id is not None
+            or args.max_usd is not None) and not args.sweep:
+        parser.error("--top, --issues, --sweep-id and --max-usd require --sweep")
     if args.sweep and args.top is not None and not 1 <= args.top <= 100:
         parser.error("--top must be between 1 and 100")
+    max_usd = 2.0 if args.max_usd is None else args.max_usd
+    if args.sweep and not 0.1 <= max_usd <= 50:
+        parser.error("--max-usd must be between 0.1 and 50")
     if args.issues is not None:
         try:
             issue_numbers = [int(n) for n in args.issues.split(",")]
@@ -58,9 +63,9 @@ def main(argv: list[str] | None = None) -> int:
                 clone(args.repo, path)
             collect(args.repo)
             if sweep_id is None:
-                sweep_id = sweep.create(conn, args.repo, top, issue_numbers, args.model)
+                sweep_id = sweep.create(conn, args.repo, top, issue_numbers, args.model, max_usd)
             selected = sweep.plan(conn, args.repo, top, issue_numbers)
-            sweep.run(conn, args.repo, sweep_id, selected, args.model)
+            sweep.run(conn, args.repo, sweep_id, selected, args.model, max_usd)
             print(f"\nboard: open {board.write(conn, args.repo)}")
             conn.close()
             return 0
@@ -93,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.issue is not None:
-        status = sweep.process_issue(conn, args.repo, args.issue, args.model)
+        status = sweep.process_issue(conn, args.repo, args.issue, args.model)["status"]
         inv_id = conn.execute(
             "SELECT id FROM investigations WHERE repo = %s AND issue = %s ORDER BY id DESC LIMIT 1",
             (args.repo, args.issue),

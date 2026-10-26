@@ -45,10 +45,12 @@ def test_connect_does_not_wait_behind_another_open_transaction(db):
 
 def test_connect_on_an_older_database_adds_the_new_columns(db):
     db.execute("ALTER TABLE pr_verdicts DROP COLUMN fix_lines")
+    db.execute("ALTER TABLE investigations DROP COLUMN judge_cost_usd")
     db.execute("DROP TABLE sweeps")
     db.commit()
     gdb.connect().close()
     assert db.execute("SELECT fix_lines FROM pr_verdicts LIMIT 0").description[0].name == "fix_lines"
+    assert db.execute("SELECT judge_cost_usd FROM investigations LIMIT 0").description[0].name == "judge_cost_usd"
     assert db.execute("SELECT count(*) FROM sweeps").fetchone()[0] == 0
 
 
@@ -61,48 +63,52 @@ def test_sweep_status_is_constrained(db):
 # --- creating a sweep is committed at once (the sweep process uses its own connection) ----------------------
 
 def test_sweep_create_is_visible_to_another_connection_at_once(db):
-    sid = sw.create(db, "o/r", 3, None, "sonnet")
+    sid = sw.create(db, "o/r", 3, None, "sonnet", 1.5)
     other = gdb.connect()
     try:
-        row = other.execute("SELECT repo, status, top, issues, model, pid FROM sweeps WHERE id = %s",
+        row = other.execute("SELECT repo, status, top, issues, model, pid, max_usd, cost_usd FROM sweeps WHERE id = %s",
                             (sid,)).fetchone()
     finally:
         other.close()
-    assert row == ("o/r", "running", 3, None, "sonnet", os.getpid())
+    assert row == ("o/r", "running", 3, None, "sonnet", os.getpid(), 1.5, 0.0)
 
 
 def test_mcp_create_sweep_is_visible_to_another_connection_at_once(db):
-    sid = ms.create_sweep(db, "o/r", None, [424, 431], "opus")
+    sid = ms.create_sweep(db, "o/r", None, [424, 431], "opus", 2.0)
     other = gdb.connect()
     try:
-        row = other.execute("SELECT repo, status, top, issues, model, pid FROM sweeps WHERE id = %s",
+        row = other.execute("SELECT repo, status, top, issues, model, pid, max_usd FROM sweeps WHERE id = %s",
                             (sid,)).fetchone()
     finally:
         other.close()
-    assert row == ("o/r", "running", None, [424, 431], "opus", None)
+    assert row == ("o/r", "running", None, [424, 431], "opus", None, 2.0)
 
 
 # --- the life of one sweep ----------------------------------------------------------------------------------
 
 def test_sweep_round_trip(db):
-    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet")
+    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet", 2.0)
     ms.set_pid(db, sid, 123, Path("/x/sweep-1.log"))
     sw.set_planned(db, sid, [5, 3])
     sw.set_current(db, sid, 5)
-    sw.record(db, sid, 5, "verified")
+    sw.record(db, sid, 5, {"status": "verified", "cost": 0.25, "error": None})
     assert ms.latest_sweep(db, "o/r") == {"id": sid, "status": "running", "pid": 123, "planned": [5, 3],
-                                           "current": 5, "finished": [{"issue": 5, "outcome": "verified"}],
-                                           "log": "/x/sweep-1.log"}
-    sw.record(db, sid, 3, "timeout")
-    sw.finish(db, sid, "done")
+                                           "current": 5, "log": "/x/sweep-1.log", "cost_usd": 0.25,
+                                           "max_usd": 2.0, "stop_reason": None,
+                                           "finished": [{"issue": 5, "outcome": "verified", "cost": 0.25,
+                                                         "error": None}]}
+    assert sw.spent(db, sid) == 0.25
+    sw.record(db, sid, 3, {"status": "error", "cost": 0, "error": "RuntimeError: boom"})
+    sw.finish(db, sid, "stopped", "cost cap")
     latest = ms.latest_sweep(db, "o/r")
-    assert latest["status"] == "done" and latest["current"] is None
-    assert latest["finished"] == [{"issue": 5, "outcome": "verified"}, {"issue": 3, "outcome": "timeout"}]
+    assert latest["status"] == "stopped" and latest["current"] is None and latest["stop_reason"] == "cost cap"
+    assert latest["finished"][1] == {"issue": 3, "outcome": "error", "cost": 0, "error": "RuntimeError: boom"}
+    assert sw.spent(db, sid) == 0.25
     assert db.execute("SELECT finished_at IS NOT NULL FROM sweeps WHERE id = %s", (sid,)).fetchone()[0]
 
 
 def test_stop_is_asked_and_seen_between_issues(db):
-    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet")
+    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet", 2.0)
     assert not sw.stop_requested(db, sid)
     ms.request_stop(db, sid)
     assert sw.stop_requested(db, sid)
@@ -110,7 +116,7 @@ def test_stop_is_asked_and_seen_between_issues(db):
 
 
 def test_stop_does_not_reopen_a_finished_sweep(db):
-    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet")
+    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet", 2.0)
     sw.finish(db, sid, "done")
     ms.request_stop(db, sid)
     assert status_of(db, sid) == "done"
@@ -118,7 +124,7 @@ def test_stop_does_not_reopen_a_finished_sweep(db):
 
 
 def test_mark_error(db):
-    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet")
+    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet", 2.0)
     sw.set_current(db, sid, 5)
     ms.mark_error(db, sid)
     latest = ms.latest_sweep(db, "o/r")
@@ -126,9 +132,9 @@ def test_mark_error(db):
 
 
 def test_latest_sweep_is_the_newest_for_that_repo(db):
-    ms.create_sweep(db, "o/r", 1, None, "sonnet")
-    newest = ms.create_sweep(db, "o/r", 2, None, "sonnet")
-    ms.create_sweep(db, "o/other", 3, None, "sonnet")
+    ms.create_sweep(db, "o/r", 1, None, "sonnet", 2.0)
+    newest = ms.create_sweep(db, "o/r", 2, None, "sonnet", 2.0)
+    ms.create_sweep(db, "o/other", 3, None, "sonnet", 2.0)
     assert ms.latest_sweep(db, "o/r")["id"] == newest
     assert ms.latest_sweep(db, "nobody/here") is None
 
@@ -180,15 +186,16 @@ def test_run_survives_a_database_error_in_one_issue(db, monkeypatch):
     def process(conn, repo, issue, model):
         if issue == 5:
             conn.execute("SELECT * FROM no_such_table")  # aborts the transaction
-        return "verified"
+        return {"status": "verified", "cost": 0.4, "error": None}
     monkeypatch.setattr(sw, "process_issue", process)
     monkeypatch.setattr(sw.board, "write", lambda conn, repo: None)
-    sid = sw.create(db, "o/r", 2, None, "sonnet")
-    result = sw.run(db, "o/r", sid, [5, 3], "sonnet")
-    assert result == {"status": "done", "finished": [{"issue": 5, "outcome": "error"},
-                                                      {"issue": 3, "outcome": "verified"}]}
+    sid = sw.create(db, "o/r", 2, None, "sonnet", 2.0)
+    result = sw.run(db, "o/r", sid, [5, 3], "sonnet", 2.0)
+    assert result["status"] == "done" and result["stop_reason"] is None
+    assert [(f["issue"], f["outcome"], f["cost"]) for f in result["finished"]] == [(5, "error", 0), (3, "verified", 0.4)]
+    assert result["finished"][0]["error"].startswith("psycopg.errors.UndefinedTable")
     latest = ms.latest_sweep(db, "o/r")
-    assert latest["status"] == "done"
+    assert latest["status"] == "done" and latest["cost_usd"] == 0.4
     assert latest["finished"] == result["finished"]
 
 
@@ -231,13 +238,15 @@ def test_mcp_tools_read_the_real_database(judged, monkeypatch, tmp_path):
     assert board["rows"][0]["best"]["pr"] == 10
     assert board["rows"][0]["page"] == str(tmp_path / "site" / "r" / "issues" / "2.html")
 
-    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet")
+    sid = ms.create_sweep(db, "o/r", 2, None, "sonnet", 2.0)
     ms.set_pid(db, sid, os.getpid(), tmp_path / "x.log")  # a live pid
     sw.set_planned(db, sid, [2, 1])
-    sw.record(db, sid, 2, "verified")
+    sw.record(db, sid, 2, {"status": "verified", "cost": 0.3, "error": None})
     status = ms.sweep_status("o/r")
     assert status["status"] == "running" and status["done"] == 1 and status["total"] == 2
-    assert status["finished"] == [{"issue": 2, "outcome": "verified", "result": bd.rows(db, "o/r")[0]["result"]}]
+    assert status["finished"] == [{"issue": 2, "outcome": "verified", "cost": 0.3, "error": None,
+                                   "result": bd.rows(db, "o/r")[0]["result"]}]
+    assert status["cost_usd"] == 0.3 and status["max_usd"] == 2.0
 
     assert ms.stop_sweep("o/r") == {"sweep_id": sid, "status": "stopping"}
     assert status_of(db, sid) == "stopping"
@@ -335,6 +344,7 @@ def test_candidates_run_stores_checked_fix_lines(db, monkeypatch):
         {"pr": 11, "verdict": "no", "why": "unrelated", "lines": [real]},
     ], [], [0.1]))
     assert cd.run(db, inv) == []
+    assert db.execute("SELECT judge_cost_usd FROM investigations WHERE id = %s", (inv,)).fetchone()[0] == 0.1
     stored = dict(db.execute("SELECT pr, fix_lines FROM pr_verdicts WHERE investigation_id = %s", (inv,)))
     assert stored[10] == [{**real, "checked": True}, {**made_up, "checked": False}]
     assert stored[11] == []
@@ -368,3 +378,25 @@ def test_get_board_passes_the_other_fixing_prs_through(judged, monkeypatch, tmp_
     monkeypatch.setattr(ms, "SITE_DIR", tmp_path / "site")
     row = ms.get_board("o/r")["rows"][0]
     assert [o["pr"] for o in row["others"]] == [12]
+
+
+def test_process_issue_returns_status_and_the_full_cost(db, monkeypatch):
+    add_issue(db, 2)
+    inv = add_inv(db, 2, "verified", report={"cause": "c", "repro": [], "evidence": [], "confidence": "high"})
+    db.execute("UPDATE investigations SET costs_usd = '{0.2, 0.1}', judge_cost_usd = 0.05 WHERE id = %s", (inv,))
+    db.commit()
+    monkeypatch.setattr(sw.investigate, "run", lambda conn, repo, issue, symptom, model: (inv, {"status": "verified"}))
+    monkeypatch.setattr(sw.candidates, "run", lambda conn, inv_id, model: [])
+    monkeypatch.setattr(sw.packet, "write", lambda conn, inv_id: None)
+    out = sw.process_issue(db, "o/r", 2, "sonnet")
+    assert out == {"status": "verified", "cost": pytest.approx(0.35), "error": None}
+
+
+def test_process_issue_on_a_timeout_reports_the_investigation_cost_only(db, monkeypatch):
+    add_issue(db, 2)
+    inv = add_inv(db, 2, "timeout")
+    db.execute("UPDATE investigations SET costs_usd = '{0.2}' WHERE id = %s", (inv,))
+    db.commit()
+    monkeypatch.setattr(sw.investigate, "run", lambda conn, repo, issue, symptom, model: (inv, {"status": "timeout"}))
+    monkeypatch.setattr(sw.candidates, "run", lambda *a: pytest.fail("no judging after a timeout"))
+    assert sw.process_issue(db, "o/r", 2, "sonnet") == {"status": "timeout", "cost": pytest.approx(0.2), "error": None}

@@ -33,7 +33,8 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(ms, "latest_sweep", lambda conn, repo: state["latest"])
     monkeypatch.setattr(ms, "pid_alive", lambda pid: state["alive"])
     monkeypatch.setattr(ms, "create_sweep",
-                        lambda conn, repo, top, issues, model: state["created"].append((repo, top, issues, model)) or 42)
+                        lambda conn, repo, top, issues, model, max_usd:
+                        state["created"].append((repo, top, issues, model, max_usd)) or 42)
     monkeypatch.setattr(ms, "set_pid", lambda conn, sid, pid, log: state["pids"].append((sid, pid, str(log))))
     monkeypatch.setattr(ms, "mark_error", lambda conn, sid: state["errors"].append(sid))
     monkeypatch.setattr(ms, "request_stop", lambda conn, sid: state["stops"].append(sid))
@@ -43,9 +44,10 @@ def env(tmp_path, monkeypatch):
     return state, tmp_path
 
 
-def sweep(status="running", pid=111, planned=(5, 3, 8), finished=(), current=3):
+def sweep(status="running", pid=111, planned=(5, 3, 8), finished=(), current=3, cost=0.0, stop_reason=None):
     return {"id": 7, "status": status, "pid": pid, "planned": list(planned), "current": current,
-            "finished": [{"issue": n, "outcome": o} for n, o in finished], "log": "/x.log"}
+            "finished": [{"issue": n, "outcome": o, "cost": 0.3, "error": None} for n, o in finished],
+            "log": "/x.log", "cost_usd": cost, "max_usd": 2.0, "stop_reason": stop_reason}
 
 
 def row(n, status="verified", result="merge #9", best=None, inv=1):
@@ -68,7 +70,8 @@ def test_real_repo_names_are_accepted(env, repo):
     assert ms.sweep_status(repo) == {"status": "none"}
 
 
-@pytest.mark.parametrize("kwargs", [{"top": 0}, {"top": 101}, {"issues": list(range(51))}, {"model": "gpt-4"}])
+@pytest.mark.parametrize("kwargs", [{"top": 0}, {"top": 101}, {"issues": list(range(51))}, {"model": "gpt-4"},
+                                    {"max_usd": 0}, {"max_usd": 0.05}, {"max_usd": 51}])
 def test_bad_sweep_arguments_are_refused(env, kwargs):
     with pytest.raises(ToolError):
         ms.start_sweep("o/r", **kwargs)
@@ -82,9 +85,9 @@ def test_start_spawns_the_sweep_in_the_background_and_returns_at_once(env):
     out = ms.start_sweep("o/r")
     cmd, kwargs = FakePopen.calls[0]
     assert cmd == [sys.executable, "-m", "gate.cli", "--repo", "o/r", "--sweep", "--sweep-id", "42",
-                   "--top", "10", "--model", "sonnet"]
+                   "--top", "10", "--max-usd", "2.0", "--model", "sonnet"]
     assert kwargs["start_new_session"] is True
-    assert state["created"] == [("o/r", 10, None, "sonnet")]
+    assert state["created"] == [("o/r", 10, None, "sonnet", 2.0)]
     assert state["pids"][0][:2] == (42, 999)
     assert state["pids"][0][2].endswith("sweep-42.log")
     assert out["sweep_id"] == 42 and out["status"] == "running"
@@ -131,13 +134,14 @@ def test_status_when_never_swept(env):
 
 def test_status_reports_progress_with_each_finished_result(env):
     state, tmp = env
-    state["latest"] = sweep(finished=[(5, "verified")], current=3)
+    state["latest"] = sweep(finished=[(5, "verified")], current=3, cost=0.3)
     state["rows"] = [row(5, result="merge #9"), row(3, status=None, result="", inv=None)]
     out = ms.sweep_status("o/r")
     assert out["sweep_id"] == 7 and out["status"] == "running"
     assert out["planned"] == [5, 3, 8] and out["total"] == 3 and out["done"] == 1
     assert out["current"] == 3
-    assert out["finished"] == [{"issue": 5, "outcome": "verified", "result": "merge #9"}]
+    assert out["finished"] == [{"issue": 5, "outcome": "verified", "cost": 0.3, "error": None, "result": "merge #9"}]
+    assert out["cost_usd"] == 0.3 and out["max_usd"] == 2.0 and out["stop_reason"] is None
     assert out["board"] == str(tmp / "site" / "r" / "index.html")
 
 
@@ -198,3 +202,20 @@ def test_instructions_tell_the_agent_to_name_the_other_fixes_and_what_checked_me
     text = ms.INSTRUCTIONS
     assert "others" in text and "duplicate" in text
     assert "fix lines checked" in text and "not that they fix" in text
+
+
+def test_start_passes_a_custom_cap(env):
+    state, _ = env
+    ms.start_sweep("o/r", max_usd=0.5)
+    cmd, _ = FakePopen.calls[0]
+    assert cmd[cmd.index("--max-usd") + 1] == "0.5"
+    assert state["created"][0][-1] == 0.5
+
+
+def test_status_shows_why_a_sweep_stopped(env):
+    state, _ = env
+    state["latest"] = sweep("stopped", finished=[(5, "verified"), (3, "error")], current=None, cost=2.1,
+                            stop_reason="cost cap")
+    out = ms.sweep_status("o/r")
+    assert out["status"] == "stopped" and out["stop_reason"] == "cost cap" and out["cost_usd"] == 2.1
+    assert out["finished"][1]["outcome"] == "error" and "error" in out["finished"][1]

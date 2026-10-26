@@ -246,6 +246,7 @@ def run(conn, inv_id: int, model: str | None = None) -> list[str]:
                    VALUES (%s, %s, %s, %s, %s, %s::jsonb) ON CONFLICT DO NOTHING""",
                 (inv_id, v["pr"], reasons[v["pr"]], v["verdict"], v["why"], json.dumps(fix_lines)),
             )
+    conn.execute("UPDATE investigations SET judge_cost_usd = %s WHERE id = %s", (sum(costs), inv_id))
     conn.commit()
 
     order = {"fixes": 0, "partly": 1, "no": 2}

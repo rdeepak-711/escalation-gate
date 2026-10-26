@@ -53,18 +53,21 @@ def open_db():
 
 def latest_sweep(conn, repo: str):
     row = conn.execute(
-        "SELECT id, status, pid, planned, current, finished, log FROM sweeps WHERE repo = %s ORDER BY id DESC LIMIT 1",
+        "SELECT id, status, pid, planned, current, finished, log, cost_usd, max_usd, stop_reason "
+        "FROM sweeps WHERE repo = %s ORDER BY id DESC LIMIT 1",
         (repo,),
     ).fetchone()
     if row is None:
         return None
-    return dict(zip(("id", "status", "pid", "planned", "current", "finished", "log"), row))
+    return dict(zip(("id", "status", "pid", "planned", "current", "finished", "log",
+                     "cost_usd", "max_usd", "stop_reason"), row))
 
 
-def create_sweep(conn, repo: str, top: int | None, issues: list[int] | None, model: str) -> int:
+def create_sweep(conn, repo: str, top: int | None, issues: list[int] | None, model: str, max_usd: float) -> int:
     sweep_id = conn.execute(
-        "INSERT INTO sweeps (repo, status, top, issues, model) VALUES (%s, 'running', %s, %s, %s) RETURNING id",
-        (repo, top, issues, model),
+        "INSERT INTO sweeps (repo, status, top, issues, model, max_usd) "
+        "VALUES (%s, 'running', %s, %s, %s, %s) RETURNING id",
+        (repo, top, issues, model, max_usd),
     ).fetchone()[0]
     conn.commit()
     return sweep_id
@@ -110,7 +113,8 @@ def board_path(repo: str) -> str:
 
 
 @server.tool()
-def start_sweep(repo: str, top: int = 10, issues: list[int] | None = None, model: str = "sonnet") -> dict:
+def start_sweep(repo: str, top: int = 10, issues: list[int] | None = None, model: str = "sonnet",
+                max_usd: float = 2.0) -> dict:
     validate_repo(repo)
     if not 1 <= top <= 100:
         raise ToolError("top must be between 1 and 100")
@@ -118,6 +122,8 @@ def start_sweep(repo: str, top: int = 10, issues: list[int] | None = None, model
         raise ToolError("issues must contain at most 50 positive issue numbers")
     if model not in ("sonnet", "opus", "haiku"):
         raise ToolError("model must be sonnet, opus, or haiku")
+    if not 0.1 <= max_usd <= 50:
+        raise ToolError("max_usd must be between 0.1 and 50")
     preflight()
     conn = open_db()
     try:
@@ -126,12 +132,12 @@ def start_sweep(repo: str, top: int = 10, issues: list[int] | None = None, model
             if pid_alive(latest.get("pid")):
                 raise ToolError("a sweep is already running for this repository")
             mark_error(conn, latest["id"])
-        sweep_id = create_sweep(conn, repo, None if issues is not None else top, issues, model)
+        sweep_id = create_sweep(conn, repo, None if issues is not None else top, issues, model, max_usd)
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         log = OUT_DIR / f"sweep-{sweep_id}.log"
         command = [sys.executable, "-m", "gate.cli", "--repo", repo, "--sweep", "--sweep-id", str(sweep_id)]
         command += ["--issues", ",".join(map(str, issues))] if issues is not None else ["--top", str(top)]
-        command += ["--model", model]
+        command += ["--max-usd", str(max_usd), "--model", model]
         with log.open("w") as stream:
             proc = subprocess.Popen(command, cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT,
                                     start_new_session=True)
@@ -158,7 +164,8 @@ def sweep_status(repo: str) -> dict:
         planned = latest.get("planned") or []
         return {"sweep_id": latest["id"], "status": latest["status"], "planned": planned,
                 "done": len(finished), "total": len(planned), "current": latest.get("current"),
-                "finished": finished, "board": board_path(repo)}
+                "cost_usd": latest.get("cost_usd"), "max_usd": latest.get("max_usd"),
+                "stop_reason": latest.get("stop_reason"), "finished": finished, "board": board_path(repo)}
     finally:
         conn.close()
 

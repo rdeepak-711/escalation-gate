@@ -38,7 +38,7 @@ def test_the_server_answers_over_stdio(db):
 
     tools, status, board, bad_model, bad_repo = asyncio.run(asyncio.wait_for(go(), 60))
     assert sorted(tools) == ["get_board", "start_sweep", "stop_sweep", "sweep_status"]
-    assert set(tools["start_sweep"].input_schema["properties"]) == {"repo", "top", "issues", "model"}
+    assert set(tools["start_sweep"].input_schema["properties"]) == {"repo", "top", "issues", "model", "max_usd"}
     assert payload(status) == {"status": "none"}
     rows = payload(board)["rows"]
     assert [r["number"] for r in rows] == [2] and rows[0]["best"]["pr"] == 10

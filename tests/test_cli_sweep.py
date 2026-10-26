@@ -30,10 +30,10 @@ def faked(tmp_path, monkeypatch):
     conn = FakeConn(calls)
     monkeypatch.setattr(cli, "connect", lambda: conn)
     monkeypatch.setattr(cli, "collect", lambda repo: calls.append(("collect", repo)))
-    monkeypatch.setattr(sw, "create", lambda conn, repo, top, issues, model: calls.append(("create", top, issues)) or 9)
+    monkeypatch.setattr(sw, "create", lambda conn, repo, top, issues, model, max_usd: calls.append(("create", top, issues, max_usd)) or 9)
     monkeypatch.setattr(sw, "plan", lambda conn, repo, top, issues: calls.append(("plan", top, issues)) or [5, 3])
-    monkeypatch.setattr(sw, "run", lambda conn, repo, sid, selected, model:
-                        calls.append(("run", sid, selected, model)) or {"status": "done", "finished": []})
+    monkeypatch.setattr(sw, "run", lambda conn, repo, sid, selected, model, max_usd:
+                        calls.append(("run", sid, selected, model, max_usd)) or {"status": "done", "finished": []})
     monkeypatch.setattr(sw, "finish", lambda conn, sid, status: calls.append(("finish", sid, status)))
     monkeypatch.setattr(cli.board, "write", lambda conn, repo: tmp_path / "b.html")
     return calls
@@ -41,7 +41,7 @@ def faked(tmp_path, monkeypatch):
 
 def test_sweep_top_creates_plans_and_runs(faked):
     assert cli.main(["--repo", "o/r", "--sweep", "--top", "3"]) == 0
-    assert faked == [("collect", "o/r"), ("create", 3, None), ("plan", 3, None), ("run", 9, [5, 3], "sonnet")]
+    assert faked == [("collect", "o/r"), ("create", 3, None, 2.0), ("plan", 3, None), ("run", 9, [5, 3], "sonnet", 2.0)]
 
 
 def test_every_sweep_refreshes_issues_and_prs_first(faked):
@@ -52,7 +52,7 @@ def test_every_sweep_refreshes_issues_and_prs_first(faked):
 def test_sweep_named_issues(faked):
     cli.main(["--repo", "o/r", "--sweep", "--issues", "424,431", "--model", "opus"])
     assert ("plan", None, [424, 431]) in faked
-    assert faked[-1] == ("run", 9, [5, 3], "opus")
+    assert faked[-1] == ("run", 9, [5, 3], "opus", 2.0)
 
 
 def test_sweep_without_top_or_issues_defaults_to_ten(faked):
@@ -67,7 +67,7 @@ def test_given_sweep_id_skips_create(faked):
 
 
 def test_a_crashed_sweep_is_marked_error_and_exits_1(faked, monkeypatch):
-    def boom(conn, repo, sid, selected, model):
+    def boom(conn, repo, sid, selected, model, max_usd):
         raise RuntimeError("db went away")
     monkeypatch.setattr(sw, "run", boom)
     assert cli.main(["--repo", "o/r", "--sweep", "--top", "2"]) == 1
@@ -80,6 +80,9 @@ def test_a_crashed_sweep_is_marked_error_and_exits_1(faked, monkeypatch):
     ["--repo", "o/r", "--sweep", "--top", "0"],
     ["--repo", "o/r", "--sweep", "--top", "101"],
     ["--repo", "o/r", "--sweep", "--issues", "a,b"],
+    ["--repo", "o/r", "--sweep", "--max-usd", "0"],
+    ["--repo", "o/r", "--sweep", "--max-usd", "51"],
+    ["--repo", "o/r", "--issue", "5", "--max-usd", "1"],
 ])
 def test_bad_sweep_arguments_exit_with_a_usage_error(faked, argv):
     with pytest.raises(SystemExit) as e:
@@ -90,7 +93,7 @@ def test_bad_sweep_arguments_exit_with_a_usage_error(faked, argv):
 # --- review round 1: the crash handler must work even when the connection or collect is what failed -------
 
 def test_a_crash_rolls_back_before_marking_error(faked, monkeypatch):
-    def boom(conn, repo, sid, selected, model):
+    def boom(conn, repo, sid, selected, model, max_usd):
         raise RuntimeError("current transaction is aborted")
     monkeypatch.setattr(sw, "run", boom)
     assert cli.main(["--repo", "o/r", "--sweep", "--top", "2"]) == 1
@@ -106,7 +109,7 @@ def test_a_gh_failure_while_collecting_marks_the_given_sweep_error(faked, monkey
 
 
 def test_the_crash_message_survives_a_failing_finish(faked, monkeypatch, capsys):
-    def boom(conn, repo, sid, selected, model):
+    def boom(conn, repo, sid, selected, model, max_usd):
         raise RuntimeError("db went away")
 
     def finish_fails(conn, sid, status):
@@ -115,3 +118,9 @@ def test_the_crash_message_survives_a_failing_finish(faked, monkeypatch, capsys)
     monkeypatch.setattr(sw, "finish", finish_fails)
     assert cli.main(["--repo", "o/r", "--sweep", "--top", "2"]) == 1
     assert "db went away" in capsys.readouterr().err
+
+
+def test_max_usd_is_passed_to_create_and_run(faked):
+    cli.main(["--repo", "o/r", "--sweep", "--top", "2", "--max-usd", "0.5"])
+    assert ("create", 2, None, 0.5) in faked
+    assert faked[-1][-1] == 0.5
