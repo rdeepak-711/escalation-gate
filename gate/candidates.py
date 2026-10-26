@@ -50,7 +50,7 @@ Below are open pull requests that change the cited code or mention the issue. Fo
 - "no": it does not address the cause, even if it changes the same files.
 Give one verdict per pull request, and say in one sentence what in the diff decided it.
 For every "fixes" or "partly" verdict, give up to 3 lines from the diff that do the fixing: the file path,
-the line number in the new version of the file, and the exact text of an added (+) line. Return these as
+the line number in the new version of the file, and the exact text of an added (+) line, without the leading +. Return these as
 "lines" entries with file, line, and quote. Do not provide lines for a "no" verdict.
 
 {prs}"""
@@ -142,10 +142,11 @@ def check_fix_lines(patches: dict[str, str], lines: list[dict], slack: int = 3) 
     checked = []
     for item in lines:
         quote = (item.get("quote") or "").strip()
+        forms = [f for f in {quote, quote.removeprefix("+").strip()} if len(f) >= 4]
         patch_lines = added_lines(patches.get(item.get("file")) or "")
         line = item.get("line")
-        valid = isinstance(line, int) and len(quote) >= 4 and any(abs(n - line) <= slack and quote in text
-                                                                for n, text in patch_lines.items())
+        valid = isinstance(line, int) and any(abs(n - line) <= slack and f in text
+                                              for n, text in patch_lines.items() for f in forms)
         checked.append({**item, "checked": valid})
     return checked
 

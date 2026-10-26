@@ -86,3 +86,21 @@ def test_null_or_missing_fields_are_not_checked_and_do_not_crash():
         {"file": "score.py", "line": None, "quote": "return max(capped, role.min_final_score)"},
     ])
     assert [o["checked"] for o in out] == [False, False, False, False]
+
+
+def test_a_quote_copied_with_the_diff_plus_still_checks():
+    out = cd.check_fix_lines({"score.py": PATCH}, [
+        fl("score.py", 12, "+    return max(capped, role.min_final_score)"),
+        fl("score.py", 42, "+b = 2"),
+    ])
+    assert [o["checked"] for o in out] == [True, True]
+    assert out[0]["quote"] == "+    return max(capped, role.min_final_score)"  # stored as the model gave it
+
+
+def test_a_plus_alone_or_a_removed_line_with_plus_is_not_checked():
+    out = cd.check_fix_lines({"score.py": PATCH}, [fl("score.py", 11, "+"), fl("score.py", 11, "+    return base")])
+    assert [o["checked"] for o in out] == [False, False]
+
+
+def test_prompt_asks_for_quotes_without_the_plus():
+    assert "without the leading +" in cd.PROMPT_TEMPLATE
