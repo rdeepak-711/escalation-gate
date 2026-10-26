@@ -10,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from gate.check import check
 from gate.db import connect
+from gate.effects import KIND_LABEL
 from gate.investigate import ROOT
 
 OUT_DIR = ROOT / "out"
@@ -32,14 +33,22 @@ def confidence(inv_status: str, verdict: dict) -> dict | None:
         fix_check = f"{checked} of {len(lines)} fix lines checked"
     merge = verdict.get("merge")
     merge_check = {"clean": "merges clean", "conflicts": "conflicts"}.get(merge, "merge not checked")
+    effects = verdict.get("side_effects")
+    found = sum(bool(e.get("checked")) for e in effects) if effects is not None else 0
+    if effects is None:
+        effects_check = "side effects not checked"
+    elif found == 0:
+        effects_check = "no side effects found"
+    else:
+        effects_check = f"{found} side effect{'s' * (found != 1)} found"
     checks = ["cause lines checked" if cause_checked else "some cause lines failed the check",
-              fix_check, merge_check]
+              fix_check, merge_check, effects_check]
     if verdict.get("draft"):
         checks.append("draft PR")
     if not cause_checked or (lines and checked == 0):
         level = "low"
     elif (cause_checked and verdict["verdict"] == "fixes" and lines and checked == len(lines)
-          and merge == "clean" and not verdict.get("draft")):
+          and merge == "clean" and effects_check == "no side effects found" and not verdict.get("draft")):
         level = "high"
     else:
         level = "medium"
@@ -113,7 +122,7 @@ def environment(autoescape: bool) -> Environment:
     env = Environment(loader=FileSystemLoader(Path(__file__).parent / "templates"), autoescape=autoescape,
                       trim_blocks=True, lstrip_blocks=True)
     env.filters.update(cell=cell, joined=joined)
-    env.globals.update(merge_label=MERGE_LABEL)
+    env.globals.update(merge_label=MERGE_LABEL, kind_label=KIND_LABEL)
     return env
 
 
@@ -215,10 +224,11 @@ def load(conn, inv_id: int, repo_dir: Path) -> dict:
     for n, item in enumerate(report["evidence"], start=1):
         item["checked"] = not any(f.startswith(f"evidence {n}:") for f in failures)
 
-    verdicts = [dict(zip(("pr", "verdict", "why", "reasons", "title", "author", "draft", "files", "fix_lines"), r)) for r in conn.execute(
+    verdicts = [dict(zip(("pr", "verdict", "why", "reasons", "title", "author", "draft", "files", "fix_lines",
+                          "side_effects"), r)) for r in conn.execute(
         """SELECT v.pr, v.verdict, v.why, v.reasons, p.title, p.author, p.draft,
                   ARRAY(SELECT f.filename FROM pr_files f WHERE f.repo = p.repo AND f.pr = p.number)
-                  , v.fix_lines
+                  , v.fix_lines, v.side_effects
            FROM pr_verdicts v JOIN prs p ON p.repo = %s AND p.number = v.pr
            WHERE v.investigation_id = %s""", (repo, inv_id))]
     worth_merging = [v["pr"] for v in verdicts if v["verdict"] != "no"]

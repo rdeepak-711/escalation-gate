@@ -81,6 +81,8 @@ ALTER TABLE sweeps ADD COLUMN IF NOT EXISTS max_usd double precision;
 ALTER TABLE sweeps ADD COLUMN IF NOT EXISTS cost_usd double precision NOT NULL DEFAULT 0;
 ALTER TABLE sweeps ADD COLUMN IF NOT EXISTS stop_reason text;
 ALTER TABLE investigations ADD COLUMN IF NOT EXISTS judge_cost_usd double precision NOT NULL DEFAULT 0;
+ALTER TABLE pr_verdicts ADD COLUMN IF NOT EXISTS side_effects jsonb;
+ALTER TABLE investigations ADD COLUMN IF NOT EXISTS effects_cost_usd double precision NOT NULL DEFAULT 0;
 """
 
 CONSTRAINTS = {"PRIMARY", "FOREIGN", "CHECK", "UNIQUE"}

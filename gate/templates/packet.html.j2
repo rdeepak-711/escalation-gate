@@ -332,6 +332,13 @@
           {% if v.fix_lines %}
             <ul>{% for line in v.fix_lines %}<li><code>{{ line.file }}:{{ line.line }}</code> · <code>{{ line.quote }}</code> {{ "✅" if line.checked else "❌" }}</li>{% endfor %}</ul>
           {% else %}<p>no fix lines given</p>{% endif %}
+        </div>
+        <div class="side-effects">
+          <strong>Also changes</strong>
+          {% if v.side_effects is none %}<p>side effects not checked</p>
+          {% elif v.side_effects %}
+            <ul>{% for e in v.side_effects %}<li><code>{{ e.file }}:{{ e.line }}</code> · <code>{{ e.quote }}</code> {{ "✅" if e.checked else "❌" }} · {{ kind_label.get(e.kind, e.kind) }} · {{ e.why }}</li>{% endfor %}</ul>
+          {% else %}<p>no side effects found</p>{% endif %}
           {% if v.confidence %}<p>{{ v.confidence.text }}</p>{% endif %}
         </div>
         <div class="because">Shortlisted because: {{ v.reasons|join(", ") }}</div>

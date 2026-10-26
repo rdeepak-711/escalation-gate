@@ -114,6 +114,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.issue is None:
         candidates.run(conn, inv_id, args.model)
+        sweep.effects.run(conn, inv_id, args.model)
         html = packet.write(conn, inv_id)
     page = board.write(conn, args.repo)
     conn.close()

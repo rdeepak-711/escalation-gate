@@ -56,6 +56,12 @@ def pr_url(repo: str, n: int) -> str:
     return f"https://github.com/{repo}/pull/{n}"
 
 
+def effects_count(verdict: dict) -> int | None:
+    """How many side effects were checked in the diff, or None when the pass did not run for this PR."""
+    effects = verdict.get("side_effects")
+    return None if effects is None else sum(bool(e.get("checked")) for e in effects)
+
+
 def best_pr(repo: str, inv_status: str, verdicts: list[dict]) -> dict | None:
     """Choose the packet recommendation, or the best fixes/partly fallback for display."""
     recommended = packet.recommend(verdicts)
@@ -64,7 +70,8 @@ def best_pr(repo: str, inv_status: str, verdicts: list[dict]) -> dict | None:
     if chosen is None:
         return None
     return {"pr": chosen["pr"], "url": pr_url(repo, chosen["pr"]), "verdict": chosen["verdict"],
-            "why": chosen["why"], "confidence": packet.confidence(inv_status, chosen)}
+            "why": chosen["why"], "confidence": packet.confidence(inv_status, chosen),
+            "effects": effects_count(chosen)}
 
 
 def other_prs(repo: str, inv_status: str, verdicts: list[dict], best: dict | None) -> list[dict]:
@@ -72,7 +79,7 @@ def other_prs(repo: str, inv_status: str, verdicts: list[dict], best: dict | Non
     if best is None:
         return []
     return [{"pr": v["pr"], "url": pr_url(repo, v["pr"]), "verdict": v["verdict"], "merge": v.get("merge"),
-             "why": v["why"], "confidence": packet.confidence(inv_status, v)}
+             "why": v["why"], "confidence": packet.confidence(inv_status, v), "effects": effects_count(v)}
             for v in packet.order(verdicts) if v["verdict"] != "no" and v["pr"] != best["pr"]]
 
 
@@ -102,8 +109,9 @@ def rows(conn, repo: str) -> list[dict]:
         best = None
         others = []
         if inv_id and status in ("verified", "needs_human"):
-            verdicts = [dict(zip(("pr", "verdict", "merge", "draft", "why", "fix_lines"), r)) for r in conn.execute(
-                """SELECT v.pr, v.verdict, v.merge, p.draft, v.why, v.fix_lines FROM pr_verdicts v
+            verdicts = [dict(zip(("pr", "verdict", "merge", "draft", "why", "fix_lines", "side_effects"), r))
+                        for r in conn.execute(
+                """SELECT v.pr, v.verdict, v.merge, p.draft, v.why, v.fix_lines, v.side_effects FROM pr_verdicts v
                    LEFT JOIN prs p ON p.repo = %s AND p.number = v.pr
                    WHERE v.investigation_id = %s""", (repo, inv_id))]
             res = result(verdicts)

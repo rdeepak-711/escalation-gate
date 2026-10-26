@@ -3,7 +3,7 @@ import re
 import json
 import os
 
-from gate import board, candidates, investigate, packet
+from gate import board, candidates, effects, investigate, packet
 from gate.board import kind
 
 
@@ -55,9 +55,10 @@ def process_issue(conn, repo: str, issue: int, model: str) -> dict:
     status = outcome["status"]
     if status in ("verified", "needs_human"):
         candidates.run(conn, inv_id, model)
+        effects.run(conn, inv_id, model)
         packet.write(conn, inv_id)
     cost = conn.execute(
-        "SELECT coalesce((SELECT sum(c) FROM unnest(costs_usd) c), 0) + judge_cost_usd "
+        "SELECT coalesce((SELECT sum(c) FROM unnest(costs_usd) c), 0) + judge_cost_usd + effects_cost_usd "
         "FROM investigations WHERE id = %s", (inv_id,)).fetchone()[0]
     return {"status": status, "cost": cost, "error": None}
 

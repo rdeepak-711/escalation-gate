@@ -68,6 +68,17 @@ Each verdict is judged from the diff, not run. Merge status is a real `git merge
 {% else %}
 no fix lines given
 {% endif %}
+
+**Also changes**
+{% if v.side_effects is none %}
+side effects not checked
+{% elif v.side_effects %}
+{% for e in v.side_effects %}
+- `{{ e.file }}:{{ e.line }}` · `{{ e.quote }}` {{ "✅" if e.checked else "❌" }} · {{ kind_label.get(e.kind, e.kind) }} · {{ e.why }}
+{% endfor %}
+{% else %}
+no side effects found
+{% endif %}
 {% if v.confidence %}
 **Confidence:** {{ v.confidence.text }}
 {% endif %}

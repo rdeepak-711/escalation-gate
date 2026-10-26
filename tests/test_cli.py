@@ -28,6 +28,7 @@ def stages(tmp_path, monkeypatch):
                         lambda conn, repo, issue, symptom, model: (calls.append(("investigate", issue, symptom))
                                                                    or (7, {"status": calls_status[0]})))
     monkeypatch.setattr(cli.candidates, "run", lambda conn, inv_id, model: calls.append(("candidates", inv_id)) or [])
+    monkeypatch.setattr(cli.sweep.effects, "run", lambda conn, inv_id, model: calls.append(("effects", inv_id)) or [])
     monkeypatch.setattr(cli.packet, "write", lambda conn, inv_id: calls.append(("packet", inv_id)) or tmp_path / "p.html")
     monkeypatch.setattr(cli.board, "write", lambda conn, repo: calls.append(("board", repo)) or tmp_path / "b.html")
     monkeypatch.setattr(cli.board, "rows", lambda conn, repo: [])
@@ -43,14 +44,14 @@ def run(monkeypatch, argv, collected=0):
 def test_new_repo_is_cloned_collected_and_run_end_to_end(stages, monkeypatch):
     calls, _ = stages
     assert run(monkeypatch, ["--repo", "o/r", "--issue", "5"]) == 0
-    assert [c[0] for c in calls] == ["clone", "collect", "investigate", "candidates", "packet", "board"]
+    assert [c[0] for c in calls] == ["clone", "collect", "investigate", "candidates", "effects", "packet", "board"]
 
 
 def test_collected_repo_skips_clone_and_collect(stages, monkeypatch, tmp_path):
     calls, _ = stages
     (tmp_path / "r").mkdir()
     run(monkeypatch, ["--repo", "o/r", "--symptom", "boom"], collected=12)
-    assert [c[0] for c in calls] == ["investigate", "candidates", "packet", "board"]
+    assert [c[0] for c in calls] == ["investigate", "candidates", "effects", "packet", "board"]
     assert calls[0] == ("investigate", None, "boom")
 
 
@@ -74,7 +75,7 @@ def test_needs_human_still_gets_a_packet_but_exits_1(stages, monkeypatch, tmp_pa
     status[0] = "needs_human"
     (tmp_path / "r").mkdir()
     assert run(monkeypatch, ["--repo", "o/r", "--issue", "5"], collected=12) == 1
-    assert [c[0] for c in calls] == ["investigate", "candidates", "packet", "board"]
+    assert [c[0] for c in calls] == ["investigate", "candidates", "effects", "packet", "board"]
 
 
 def test_list_shows_the_board_without_investigating(stages, monkeypatch, tmp_path):

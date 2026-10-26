@@ -23,6 +23,10 @@ INSTRUCTIONS += """and what has no fix. Give the user the board path to open. Ne
 INSTRUCTIONS += """ For each issue, also name the others PRs that fix or partly fix it, and say that once one is merged """
 INSTRUCTIONS += """the rest likely duplicate it and can be closed. "fix lines checked" means the quoted lines are really in """
 INSTRUCTIONS += """the diff, not that they fix the bug; whether they fix it is the model's judgement from reading the diff."""
+INSTRUCTIONS += """ Before anyone merges, report the side effects of each recommended PR: "what else" it changes beyond """
+INSTRUCTIONS += """the fix (names removed, data deleted, defaults changed, undefined names), from the packet's """
+INSTRUCTIONS += """"Also changes" block; `effects` on a PR is the count of such changes found in its diff, """
+INSTRUCTIONS += """and null means the pass did not run."""
 
 server = MCPServer("escalation-gate", instructions=INSTRUCTIONS)
 REPO = re.compile(r"^[A-Za-z0-9-]+/(?!\.\.?$)[A-Za-z0-9_.-]+$")

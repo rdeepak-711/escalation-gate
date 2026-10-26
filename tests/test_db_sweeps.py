@@ -46,10 +46,12 @@ def test_connect_does_not_wait_behind_another_open_transaction(db):
 def test_connect_on_an_older_database_adds_the_new_columns(db):
     db.execute("ALTER TABLE pr_verdicts DROP COLUMN fix_lines")
     db.execute("ALTER TABLE investigations DROP COLUMN judge_cost_usd")
+    db.execute("ALTER TABLE pr_verdicts DROP COLUMN side_effects")
     db.execute("DROP TABLE sweeps")
     db.commit()
     gdb.connect().close()
     assert db.execute("SELECT fix_lines FROM pr_verdicts LIMIT 0").description[0].name == "fix_lines"
+    assert db.execute("SELECT side_effects, effects_cost_usd FROM pr_verdicts, investigations LIMIT 0").description[0].name == "side_effects"
     assert db.execute("SELECT judge_cost_usd FROM investigations LIMIT 0").description[0].name == "judge_cost_usd"
     assert db.execute("SELECT count(*) FROM sweeps").fetchone()[0] == 0
 
@@ -210,8 +212,8 @@ def judged(db):
     add_issue(db, 2, comments=1)
     add_pr(db, 10, body="fixes #2")
     inv = add_inv(db, 2, "verified", report={"cause": "c", "repro": [], "evidence": [], "confidence": "high"})
-    db.execute("INSERT INTO pr_verdicts (investigation_id, pr, reasons, verdict, why, merge, fix_lines) "
-               "VALUES (%s, 10, '{}', 'fixes', 'clamps the total', 'clean', %s::jsonb)",
+    db.execute("INSERT INTO pr_verdicts (investigation_id, pr, reasons, verdict, why, merge, fix_lines, side_effects) "
+               "VALUES (%s, 10, '{}', 'fixes', 'clamps the total', 'clean', %s::jsonb, '[]'::jsonb)",
                (inv, json.dumps([GOOD_LINE])))
     db.commit()
     return db, inv
@@ -224,7 +226,9 @@ def test_board_rows_follow_the_rank_and_carry_the_best_pr(judged):
     best = rows[0]["best"]
     assert best["pr"] == 10 and best["url"] == "https://github.com/o/r/pull/10"
     assert best["why"] == "clamps the total"
-    assert best["confidence"]["text"] == "high: cause lines checked · fix lines checked · merges clean"
+    assert best["confidence"]["text"] == ("high: cause lines checked · fix lines checked · merges clean · "
+                                          "no side effects found")
+    assert best["effects"] == 0
     assert rows[0]["inv"] == inv and rows[0]["url"] == "https://github.com/o/r/issues/2"
     assert rows[1]["best"] is None and rows[1]["inv"] is None
 
@@ -366,6 +370,7 @@ def test_board_rows_list_the_other_fixing_prs(judged):
                                                                            (11, "partly", "conflicts")]
     assert row["others"][0]["url"] == "https://github.com/o/r/pull/12"
     assert row["others"][0]["confidence"]["text"].startswith("medium: cause lines checked · no fix lines given")
+    assert row["others"][0]["effects"] is None  # never asked about
     assert bd.rows(db, "o/r")[1]["others"] == []
 
 
@@ -387,6 +392,7 @@ def test_process_issue_returns_status_and_the_full_cost(db, monkeypatch):
     db.commit()
     monkeypatch.setattr(sw.investigate, "run", lambda conn, repo, issue, symptom, model: (inv, {"status": "verified"}))
     monkeypatch.setattr(sw.candidates, "run", lambda conn, inv_id, model: [])
+    monkeypatch.setattr(sw.effects, "run", lambda conn, inv_id, model: [])
     monkeypatch.setattr(sw.packet, "write", lambda conn, inv_id: None)
     out = sw.process_issue(db, "o/r", 2, "sonnet")
     assert out == {"status": "verified", "cost": pytest.approx(0.35), "error": None}

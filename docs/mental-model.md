@@ -63,6 +63,12 @@ So the packet never claims "no other PR fixes this".
 
 **Where it breaks:** a verdict is an opinion from reading a diff. Nothing is run. Borderline verdicts can flip between runs (#414 went from "no" to "partly").
 
+### Stage 5b · Side effects: the second look (added 26 Oct)
+
+**What it does:** one more call with no tools shows the full diff of every PR judged "fixes" or "partly" and asks a different question: not "does it fix the bug" but "what else does it change", such as a name it removes or renames, data it deletes or stops collecting, a default it changes, or a name it uses that is not defined anywhere. Each answer must quote a line and say whether it was added or removed, and the tool checks that the quote really is in the diff on that side, so a claim that is not in the diff is shown crossed out and does not count.
+
+**Why this way:** every miss in the first evaluation round was a side effect of a PR that did fix the bug (a deleted data fetch, an undefined name, a rejected default), and the judge was never asked about them. So "high" confidence now also needs this pass to have run and found nothing; a PR with any checked side effect is capped at medium, and if the call failed the packet says "side effects not checked" rather than pretending.
+
 ### Stage 6 · Merge check and packet: the locksmith and the writer
 
 **What it does:** for each PR that fixes or partly fixes the bug, it downloads the PR and runs `git merge-tree`. That's a dry-run merge done in memory, which answers "would this merge cleanly or conflict?" without touching any files. Then it re-checks every citation and writes the packet as Markdown and HTML.

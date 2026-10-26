@@ -219,3 +219,18 @@ def test_status_shows_why_a_sweep_stopped(env):
     out = ms.sweep_status("o/r")
     assert out["status"] == "stopped" and out["stop_reason"] == "cost cap" and out["cost_usd"] == 2.1
     assert out["finished"][1]["outcome"] == "error" and "error" in out["finished"][1]
+
+
+def test_instructions_explain_side_effects():
+    assert "side effects" in ms.INSTRUCTIONS and "what else" in ms.INSTRUCTIONS
+
+
+def test_get_board_passes_the_effects_count_through(env):
+    state, _ = env
+    best = {"pr": 9, "url": "u", "verdict": "fixes", "why": "w", "effects": 2,
+            "confidence": {"level": "medium", "checks": [], "text": "medium: 2 side effects found"}}
+    state["rows"] = [{**row(5, best=best), "others": [{"pr": 8, "url": "u", "verdict": "partly", "merge": "clean",
+                                                     "why": "w", "effects": None, "confidence": None}]}]
+    out = ms.get_board("o/r")
+    assert out["rows"][0]["best"]["effects"] == 2
+    assert out["rows"][0]["others"][0]["effects"] is None
