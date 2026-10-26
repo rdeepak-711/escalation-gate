@@ -9,6 +9,8 @@
 **Confidence:** {{ report.confidence }}.
 {% if recommended %}
 **Recommended:** merge #{{ recommended.pr }} ("{{ recommended.title }}"). It was judged to fix the cause from its diff, not run, and it merges clean.
+{% elif draft_fixes %}
+**Not ready to merge:** {{ draft_fixes|map(attribute="pr")|list|joined }} {{ "was" if draft_fixes|length == 1 else "were" }} judged to fix the cause from the diff, but {{ "it is a draft PR" if draft_fixes|length == 1 else "they are draft PRs" }}.
 {% else %}
 **No open PR was found that fixes this cause and merges clean.**
 {% endif %}
@@ -44,15 +46,32 @@ Every citation below was checked against the code at `{{ commit }}`: the file ex
 
 {% if verdicts %}
 Each verdict is judged from the diff, not run. Merge status is a real `git merge-tree` check against `{{ commit }}`.
-{% if competing|length > 1 %}
+{% if overlap %}
 
-{{ competing|joined }} all change the cause. Once one is merged, the others duplicate it.
+{{ overlap }}
 {% endif %}
 
 | PR | Verdict | Merge | Why | Shortlisted because |
 |---|---|---|---|---|
 {% for v in verdicts %}
-| #{{ v.pr }} {{ v.title|cell }} | **{{ v.verdict }}** | {{ merge_label[v.merge] }} | {{ v.why|cell }} | {{ v.reasons|join(", ")|cell }} |
+| [#{{ v.pr }} {{ v.title|cell }}](https://github.com/{{ repo }}/pull/{{ v.pr }}){{ " (draft)" if v.draft }} | **{{ v.verdict }}** | {{ merge_label[v.merge] }} | {{ v.why|cell }} | {{ v.reasons|join(", ")|cell }} |
+{% endfor %}
+
+{% for v in judged %}
+### [#{{ v.pr }} · {{ v.title }}](https://github.com/{{ repo }}/pull/{{ v.pr }}) — {{ v.verdict|capitalize }}
+
+**Lines that fix it**
+{% if v.fix_lines %}
+{% for line in v.fix_lines %}
+- `{{ line.file }}:{{ line.line }}` · `{{ line.quote }}` {{ "✅" if line.checked else "❌" }}
+{% endfor %}
+{% else %}
+no fix lines given
+{% endif %}
+{% if v.confidence %}
+**Confidence:** {{ v.confidence.text }}
+{% endif %}
+
 {% endfor %}
 {% else %}
 No open PR changes a cited line or mentions the issue.

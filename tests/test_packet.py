@@ -20,9 +20,9 @@ def data(verdicts):
     }
 
 
-def v(pr, verdict, merge="clean"):
+def v(pr, verdict, merge="clean", draft=False, files=("github.py",)):
     return {"pr": pr, "title": f"PR {pr}", "author": "a", "verdict": verdict, "why": "because",
-            "reasons": ["changes github.py:239"], "merge": merge}
+            "reasons": ["changes github.py:239"], "merge": merge, "draft": draft, "files": list(files)}
 
 
 def test_verdicts_are_ordered_fixes_partly_no():
@@ -56,6 +56,32 @@ def test_a_failed_citation_is_shown_not_hidden():
 def test_competing_prs_are_listed_together():
     md = pk.render_markdown(data([v(425, "fixes"), v(415, "fixes", "conflicts"), v(242, "partly")]))
     assert "#415, #425 and #242 all change the cause" in md
+    assert "change the same files" in md
+
+
+def test_draft_fix_is_not_recommended():
+    assert pk.recommend([v(1, "fixes", draft=True), v(2, "partly")]) is None
+    assert pk.recommend([v(1, "fixes", draft=True), v(3, "fixes")])["pr"] == 3
+
+
+def test_draft_that_fixes_is_named_as_a_draft():
+    d = data([v(4952, "fixes", draft=True)])
+    for out in (pk.render_markdown(d), pk.render_html(d)):
+        assert "#4952" in out and "draft" in out.lower()
+        assert "Recommended: merge #4952" not in out and "Recommended:** merge #4952" not in out
+
+
+def test_prs_on_different_files_are_not_called_duplicates():
+    d = data([v(4948, "partly", files=["ts/Triggers.ts"]), v(4954, "partly", files=["python/triggers.py"])])
+    for out in (pk.render_markdown(d), pk.render_html(d)):
+        assert "duplicate" not in out
+        assert "#4948 and #4954 change different files" in out
+
+
+def test_overlap_groups_are_found_through_shared_files():
+    groups = pk.overlap_groups([v(1, "fixes", files=["a"]), v(2, "partly", files=["a", "b"]),
+                                v(3, "partly", files=["c"])])
+    assert groups == [[1, 2], [3]]
 
 
 def test_html_escapes_text_from_the_report():

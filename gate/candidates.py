@@ -10,6 +10,7 @@ from gate.investigate import ROOT, RUNS_DIR, run_claude
 
 MAX_CANDIDATES = 30
 PATCH_LIMIT = 12_000
+OTHER_PATCH_LIMIT = 4_000
 HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+\d+(?:,\d+)? @@", re.M)
 
 VERDICT_SCHEMA = {
@@ -25,6 +26,11 @@ VERDICT_SCHEMA = {
                     "pr": {"type": "integer"},
                     "verdict": {"type": "string", "enum": ["fixes", "partly", "no"]},
                     "why": {"type": "string"},
+                    "lines": {"type": "array", "items": {
+                        "type": "object", "required": ["file", "line", "quote"],
+                        "properties": {"file": {"type": "string"}, "line": {"type": "integer"},
+                                       "quote": {"type": "string"}},
+                    }},
                 },
             },
         },
@@ -43,6 +49,9 @@ Below are open pull requests that change the cited code or mention the issue. Fo
 - "partly": it removes part of the cause, or only on some code paths.
 - "no": it does not address the cause, even if it changes the same files.
 Give one verdict per pull request, and say in one sentence what in the diff decided it.
+For every "fixes" or "partly" verdict, give up to 3 lines from the diff that do the fixing: the file path,
+the line number in the new version of the file, and the exact text of an added (+) line. Return these as
+"lines" entries with file, line, and quote. Do not provide lines for a "no" verdict.
 
 {prs}"""
 
@@ -110,6 +119,37 @@ def clip(text: str, limit: int = PATCH_LIMIT) -> str:
     return text[:limit] + f"\n[... {len(text) - limit} more characters cut]"
 
 
+def added_lines(patch: str) -> dict[int, str]:
+    """Map new-file line numbers to added text in a unified diff."""
+    added = {}
+    new_line = None
+    for line in patch.splitlines():
+        if line.startswith("@@"):
+            match = re.search(r"\+(\d+)(?:,\d+)?", line)
+            new_line = int(match.group(1)) if match else None
+        elif new_line is not None and line.startswith("+"):
+            added[new_line] = line[1:]
+            new_line += 1
+        elif new_line is not None and line.startswith(" "):
+            new_line += 1
+        elif line.startswith("\\ No newline at end of file"):
+            continue
+    return added
+
+
+def check_fix_lines(patches: dict[str, str], lines: list[dict], slack: int = 3) -> list[dict]:
+    """Check quoted fix lines against added lines in the corresponding PR patches."""
+    checked = []
+    for item in lines:
+        quote = (item.get("quote") or "").strip()
+        patch_lines = added_lines(patches.get(item.get("file")) or "")
+        line = item.get("line")
+        valid = isinstance(line, int) and len(quote) >= 4 and any(abs(n - line) <= slack and quote in text
+                                                                for n, text in patch_lines.items())
+        checked.append({**item, "checked": valid})
+    return checked
+
+
 def shortlist(conn, repo: str, issue: int | None, report: dict) -> list[dict]:
     """Query the collected PRs and rank them against the citations."""
     cited = cited_files(report)
@@ -137,12 +177,14 @@ def build_prompt(conn, repo: str, report: dict, candidates: list[dict]) -> str:
         files = conn.execute("SELECT filename, patch FROM pr_files WHERE repo = %s AND pr = %s ORDER BY filename",
                              (repo, c["pr"])).fetchall()
         diffs = "\n".join(f"--- {name}\n{clip(patch)}" for name, patch in files if name in cited)
-        others = [name for name, _ in files if name not in cited]
+        other_files = [(name, patch) for name, patch in files if name not in cited]
+        other_diffs = clip("\n".join(f"--- {name}\n{patch}" for name, patch in other_files),
+                           OTHER_PATCH_LIMIT) if other_files else "none"
         blocks.append(
             f"=== PR #{c['pr']}: {title}\n"
             f"Description: {clip(body, 1500) or '(none)'}\n"
-            f"Other files changed (diff not shown): {', '.join(others) or 'none'}\n"
-            f"{diffs or '(no diff of the cited files)'}"
+            f"{diffs or '(no diff of the cited files)'}\n"
+            f"Other files changed:\n{other_diffs}"
         )
     return PROMPT_TEMPLATE.format(cause=report["cause"], evidence=evidence, prs="\n\n".join(blocks))
 
@@ -192,10 +234,16 @@ def run(conn, inv_id: int, model: str | None = None) -> list[str]:
     reasons = {c["pr"]: c["reasons"] for c in candidates}
     for v in verdicts:
         if v["pr"] in reasons:
+            if v["verdict"] == "no":
+                fix_lines = []
+            else:
+                patches = dict(conn.execute(
+                    "SELECT filename, patch FROM pr_files WHERE repo = %s AND pr = %s", (row[0], v["pr"])))
+                fix_lines = check_fix_lines(patches, v.get("lines", []))
             conn.execute(
-                """INSERT INTO pr_verdicts (investigation_id, pr, reasons, verdict, why)
-                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""",
-                (inv_id, v["pr"], reasons[v["pr"]], v["verdict"], v["why"]),
+                """INSERT INTO pr_verdicts (investigation_id, pr, reasons, verdict, why, fix_lines)
+                   VALUES (%s, %s, %s, %s, %s, %s::jsonb) ON CONFLICT DO NOTHING""",
+                (inv_id, v["pr"], reasons[v["pr"]], v["verdict"], v["why"], json.dumps(fix_lines)),
             )
     conn.commit()
 

@@ -17,13 +17,70 @@ ORDER = {"fixes": 0, "partly": 1, "no": 2}
 MERGE_LABEL = {"clean": "merges clean", "conflicts": "conflicts", "unknown": "unknown", None: "not checked"}
 
 
+def confidence(inv_status: str, verdict: dict) -> dict | None:
+    """Describe confidence using only the cause, fix lines, and merge checks that ran."""
+    if verdict["verdict"] == "no":
+        return None
+    cause_checked = inv_status == "verified"
+    lines = verdict.get("fix_lines", [])
+    checked = sum(bool(line.get("checked")) for line in lines)
+    if not lines:
+        fix_check = "no fix lines given"
+    elif checked == len(lines):
+        fix_check = "fix lines checked"
+    else:
+        fix_check = f"{checked} of {len(lines)} fix lines checked"
+    merge = verdict.get("merge")
+    merge_check = {"clean": "merges clean", "conflicts": "conflicts"}.get(merge, "merge not checked")
+    checks = ["cause lines checked" if cause_checked else "some cause lines failed the check",
+              fix_check, merge_check]
+    if verdict.get("draft"):
+        checks.append("draft PR")
+    if not cause_checked or (lines and checked == 0):
+        level = "low"
+    elif (cause_checked and verdict["verdict"] == "fixes" and lines and checked == len(lines)
+          and merge == "clean" and not verdict.get("draft")):
+        level = "high"
+    else:
+        level = "medium"
+    return {"level": level, "checks": checks, "text": f"{level}: " + " · ".join(checks)}
+
+
 def order(verdicts: list[dict]) -> list[dict]:
     return sorted(verdicts, key=lambda v: (ORDER[v["verdict"]], v["pr"]))
 
 
 def recommend(verdicts: list[dict]) -> dict | None:
-    """The first PR judged to fix the cause that also merges clean."""
-    return next((v for v in order(verdicts) if v["verdict"] == "fixes" and v["merge"] == "clean"), None)
+    """The first PR judged to fix the cause that also merges clean and isn't a draft."""
+    return next((v for v in order(verdicts)
+                 if v["verdict"] == "fixes" and v["merge"] == "clean" and not v.get("draft")), None)
+
+
+def overlap_groups(verdicts: list[dict]) -> list[list[int]]:
+    """PRs grouped by shared changed files (transitively), in order: only PRs in one group can duplicate each other."""
+    groups: list[tuple[set[str], list[int]]] = []
+    for v in verdicts:
+        files, prs = set(v.get("files", [])), [v["pr"]]
+        for group in [g for g in groups if g[0] & files]:
+            groups.remove(group)
+            files |= group[0]
+            prs = group[1] + prs
+        groups.append((files, prs))
+    found = [sorted(prs, key=[x["pr"] for x in verdicts].index) for _, prs in groups]
+    return sorted(found, key=lambda g: [x["pr"] for x in verdicts].index(g[0]))
+
+
+def overlap_note(groups: list[list[int]]) -> str:
+    """One line on whether the PRs that change the cause overlap, from their changed files, not from the model."""
+    if len(groups) == 1:
+        return (f"{joined(groups[0])} all change the cause and change the same files. "
+                "Once one is merged, the others likely duplicate it.")
+    if all(len(g) == 1 for g in groups):
+        return (f"{joined([g[0] for g in groups])} change different files, "
+                "so they may be needed together rather than one instead of another.")
+    parts = "; ".join(joined(g) for g in groups)
+    return (f"These groups change different files from each other: {parts}. Within a group, once one is merged "
+            "the others likely duplicate it; across groups they may be needed together.")
 
 
 def joined(prs: list[int]) -> str:
@@ -93,6 +150,8 @@ def chain(report: dict) -> list[dict]:
 
 def context(data: dict) -> dict:
     verdicts = order(data["verdicts"])
+    for verdict in verdicts:
+        verdict["confidence"] = confidence(data["status"], verdict)
     lead, rest = split_cause(data["report"]["cause"])
     return {**data, "verdicts": verdicts, "recommended": recommend(verdicts),
             "cause_lead": lead, "cause_rest": rest, "label": label(data["title"]),
@@ -102,6 +161,9 @@ def context(data: dict) -> dict:
             "chain": chain(data["report"]), "open_prs": data.get("open_prs"),
             "verified": sum(bool(e.get("checked")) for e in data["report"]["evidence"]),
             "competing": [v["pr"] for v in verdicts if v["verdict"] != "no"],
+            "overlap": overlap_note(overlap_groups([v for v in verdicts if v["verdict"] != "no"]))
+            if sum(v["verdict"] != "no" for v in verdicts) > 1 else "",
+            "draft_fixes": [v for v in verdicts if v["verdict"] == "fixes" and v.get("draft")],
             "counts": {k: sum(v["verdict"] == k for v in verdicts) for k in ORDER}}
 
 
@@ -153,8 +215,10 @@ def load(conn, inv_id: int, repo_dir: Path) -> dict:
     for n, item in enumerate(report["evidence"], start=1):
         item["checked"] = not any(f.startswith(f"evidence {n}:") for f in failures)
 
-    verdicts = [dict(zip(("pr", "verdict", "why", "reasons", "title", "author"), r)) for r in conn.execute(
-        """SELECT v.pr, v.verdict, v.why, v.reasons, p.title, p.author
+    verdicts = [dict(zip(("pr", "verdict", "why", "reasons", "title", "author", "draft", "files", "fix_lines"), r)) for r in conn.execute(
+        """SELECT v.pr, v.verdict, v.why, v.reasons, p.title, p.author, p.draft,
+                  ARRAY(SELECT f.filename FROM pr_files f WHERE f.repo = p.repo AND f.pr = p.number)
+                  , v.fix_lines
            FROM pr_verdicts v JOIN prs p ON p.repo = %s AND p.number = v.pr
            WHERE v.investigation_id = %s""", (repo, inv_id))]
     worth_merging = [v["pr"] for v in verdicts if v["verdict"] != "no"]

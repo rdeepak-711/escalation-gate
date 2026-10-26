@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ repo }} · issue board · escalation-gate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,500;1,500&display=swap">
 <style>
   :root {
-    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373; --line:#e5e5e5;
+    --bg:#dde3e8; --card:#e9eef2; --ink:#3b1f36; --text:#3b1f36; --soft:#5e4a5a; --muted:#5e4a5a; --line:#bfc8d0;
     --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0; --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
-    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif; --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+    --sans:"Geist", -apple-system, "Segoe UI", Roboto, sans-serif; --mono:"Geist Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 var(--sans); }
   a { color:var(--ink); }
-  .bar { background:#fff; border-bottom:1px solid var(--line); }
+  .bar { background:#e9eef2; border-bottom:1px solid var(--line); }
   .wrap { max-width:1200px; margin:0 auto; padding:0 32px; }
   .bar .wrap { display:flex; justify-content:space-between; align-items:center; height:52px; }
   .brand { font:600 14px var(--mono); text-decoration:none; }
@@ -28,16 +28,16 @@
   .tile span { font-size:13px; color:var(--soft); }
   .tile.ready { background:var(--green-bg); border-color:var(--green-line); }
   .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
-  .filters button { font:500 13px var(--sans); background:#fff; border:1px solid var(--line); color:var(--soft);
+  .filters button { font:500 13px var(--sans); background:#e9eef2; border:1px solid var(--line); color:var(--soft);
                     padding:5px 12px; border-radius:999px; cursor:pointer; }
-  .filters button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .filters button.on { background:var(--ink); color:#e9eef2; border-color:var(--ink); }
   table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   th, td { text-align:left; padding:10px 12px; border-top:1px solid var(--line); vertical-align:top; font-size:14px; }
-  th { background:#f5f5f5; border-top:0; font-weight:600; color:var(--ink); font-size:13px; }
+  th { background:#d3dae0; border-top:0; font-weight:600; color:var(--ink); font-size:13px; }
   td.n { font:13px var(--mono); white-space:nowrap; }
   td.s { font-size:16px; width:36px; text-align:center; }
   td.title { overflow-wrap:anywhere; }
-  .kind { font-size:12px; padding:1px 8px; border-radius:999px; background:#f0f0f0; color:var(--soft); white-space:nowrap; }
+  .kind { font-size:12px; padding:1px 8px; border-radius:999px; background:#d3dae0; color:var(--soft); white-space:nowrap; }
   .kind.bug { background:var(--amber-bg); color:var(--amber); }
   .res a { font-weight:500; }
   .res .ready { color:var(--green); font-weight:600; }
@@ -53,6 +53,7 @@
     tr > td.res.empty { display:none; }
     thead { display:none; }
   }
+  h1, h2 { font-family:"Playfair Display", Georgia, serif; font-weight:500; letter-spacing:-.01em; }
 </style>
 </head>
 <body>
@@ -85,12 +86,22 @@
     {% for r in rows %}
     <tr data-kind="{{ r.kind }}" data-done="{{ 'yes' if r.status else 'no' }}">
       <td class="s" title="{{ r.status or 'not investigated' }}">{{ symbol[r.status] }}</td>
-      <td class="n"><a href="https://github.com/{{ repo }}/issues/{{ r.number }}">#{{ r.number }}</a></td>
+      <td class="n"><a href="{{ issue_url(repo, r.number) }}">#{{ r.number }}</a></td>
       <td class="k"><span class="kind {{ r.kind }}">{{ r.kind }}</span></td>
       <td class="title">{{ r.title }}</td>
       <td class="res{{ '' if r.status else ' empty' }}">
         {% if r.inv and r.status in ("verified", "needs_human") %}
-          <a href="issues/{{ r.number }}.html">{% if r.result.startswith("merge #") %}<span class="ready">{{ r.result }}</span>{% else %}{{ r.result }}{% endif %} →</a>
+          {% if r.best %}
+            <a href="{{ pr_url(repo, r.best.pr) }}">#{{ r.best.pr }} · {{ r.best.verdict }}</a>
+            <div>{{ r.best.confidence.text }}</div>
+            <div>{{ r.best.why }}</div>
+            {% for o in r.others or [] %}
+            <div>{{ "also fixes" if o.verdict == "fixes" else "also partly fixes" }}: <a href="{{ pr_url(repo, o.pr) }}">#{{ o.pr }}</a>{% if o.verdict == "fixes" %} <span class="muted">({{ merge_label[o.merge] }})</span>{% endif %}</div>
+            {% endfor %}
+            <a href="issues/{{ r.number }}.html">Open investigation →</a>
+          {% else %}
+            <a href="issues/{{ r.number }}.html">{% if r.result.startswith("merge #") %}<span class="ready">{{ r.result }}</span>{% else %}{{ r.result }}{% endif %} →</a>
+          {% endif %}
         {% elif r.status %}<span class="muted">{{ r.status }}</span>
         {% else %}<span class="muted">—</span>{% endif %}
       </td>

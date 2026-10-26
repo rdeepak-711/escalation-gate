@@ -51,3 +51,10 @@ def test_html_links_done_issues_to_their_packet_and_escapes_titles():
     assert 'href="issues/476.html"' not in html
     assert "issue 424 &lt;b&gt;" in html and "<b>" not in html.split("<body>")[1].split("issue 424")[1][:5]
     assert "192" in html
+
+
+def test_a_draft_fix_is_not_shown_as_merge():
+    from gate.board import result
+    assert result([{"pr": 4952, "verdict": "fixes", "merge": "clean", "draft": True}]) == "fixes, draft: #4952"
+    assert result([{"pr": 1, "verdict": "fixes", "merge": "clean", "draft": True},
+                   {"pr": 2, "verdict": "fixes", "merge": "clean", "draft": False}]) == "merge #2"

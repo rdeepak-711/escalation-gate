@@ -75,7 +75,26 @@ Each run prints the path of its packet (`out/packet-<id>.html`) and the board (`
 - It uses the Postgres database at `DATABASE_URL` (default `postgresql://localhost/escalation_gate`).
 - Cost is about **$0.03–0.45 per issue** on Sonnet. Most of it is the judging step, which is skipped when no open PR touches the cited lines. `--model opus` is stronger and about 5× the cost.
 - Each stage can also run alone: `gate.collect`, `gate.investigate`, `gate.candidates`, `gate.packet`.
-- Tests need no network, no Claude and no Postgres: `uv run pytest -q` (62 tests).
+- Tests need no network and no Claude, but do need the local Postgres: each database test makes its own throwaway database and drops it after (`GATE_TEST_ADMIN_URL`, default `postgresql://localhost/postgres`). Run them with `uv run pytest -q`.
+
+## Use it from Claude Code (MCP)
+
+escalation-gate is also an MCP server, so Claude Code can sweep a repo for you. Register it once, from the cloned folder:
+
+```bash
+claude mcp add --scope user escalation-gate -- uv run --directory "$(pwd)" python -m gate.mcp_server
+```
+
+Then ask, in any Claude Code session: *"Using escalation-gate, sweep the top 5 issues of owner/name. Tell me which PR solves which issue, which to merge first, and how confident you are."*
+
+It has four tools:
+
+- `start_sweep(repo, top=10, issues=None, model="sonnet")` refreshes the repo's issues and PRs, then investigates the top open issues in the background and returns at once. Issues are ranked by how many open PRs link to them, then by 👍 and comments; feature requests and issues already investigated are skipped, so "top 5" means five new ones. Pass `issues=[...]` to pick them yourself.
+- `sweep_status(repo)` shows which issue it's on and the result of each finished one.
+- `get_board(repo)` returns every investigated issue with the PR to merge, the other PRs that also fix it (likely duplicates once one is merged), and a confidence level built only from checks that ran: the cause lines were found in the code, the PR's fixing lines are really in its diff, and the PR merges cleanly. Whether those lines fix the bug is still the model's judgement from reading the diff; nothing runs the PR.
+- `stop_sweep(repo)` stops after the current issue.
+
+Everything runs on your machine: your Postgres, your `gh` login, and your Claude Code login, so a sweep costs what the issues cost on your own plan (about $0.03–0.45 each on Sonnet). Each issue takes a few minutes. The board is written to `site/<name>/index.html`.
 
 ## Limits
 

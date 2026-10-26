@@ -1,5 +1,6 @@
 """Postgres storage: three tables, every row tagged with its repo"""
 import os
+import re
 
 import psycopg
 
@@ -57,12 +58,55 @@ CREATE TABLE IF NOT EXISTS pr_verdicts (
 );
 ALTER TABLE investigations ADD COLUMN IF NOT EXISTS hidden boolean NOT NULL DEFAULT false;
 ALTER TABLE pr_verdicts ADD COLUMN IF NOT EXISTS merge text;
+ALTER TABLE prs ADD COLUMN IF NOT EXISTS draft boolean NOT NULL DEFAULT false;
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS thumbs_up integer NOT NULL DEFAULT 0;
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS comments integer NOT NULL DEFAULT 0;
+ALTER TABLE pr_verdicts ADD COLUMN IF NOT EXISTS fix_lines jsonb NOT NULL DEFAULT '[]';
+CREATE TABLE IF NOT EXISTS sweeps (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    repo text NOT NULL,
+    status text NOT NULL CHECK (status IN ('running','stopping','stopped','done','error')),
+    pid integer,
+    top integer,
+    issues integer[],
+    model text,
+    planned integer[] NOT NULL DEFAULT '{}',
+    current integer,
+    finished jsonb NOT NULL DEFAULT '[]',
+    log text,
+    started_at timestamptz NOT NULL DEFAULT now(),
+    finished_at timestamptz
+);
 """
 
+CONSTRAINTS = {"PRIMARY", "FOREIGN", "CHECK", "UNIQUE"}
+
+
+def schema_columns(schema: str = SCHEMA) -> set[tuple[str, str]]:
+    """Every (table, column) the schema creates or adds, read from the schema text itself"""
+    tables = re.findall(r"CREATE TABLE IF NOT EXISTS (\w+) \((.*?)\n\);", schema, re.S)
+    added = re.findall(r"ALTER TABLE (\w+) ADD COLUMN IF NOT EXISTS (\w+)", schema)
+    if len(tables) != schema.count("CREATE TABLE") or len(added) != schema.count("ALTER TABLE"):
+        raise ValueError("every schema statement must be CREATE TABLE IF NOT EXISTS or ADD COLUMN IF NOT EXISTS")
+    columns = set(added)
+    for table, body in tables:
+        for line in body.strip().splitlines():
+            name = line.split()[0]
+            if name not in CONSTRAINTS:
+                columns.add((table, name))
+    return columns
+
+
+COLUMNS = schema_columns()
+
+
 def connect() -> psycopg.Connection:
-    """Connect to the database and create tables if they don't exist"""
+    """Connect, and run the schema only when a table or column is missing, so a complete database takes no locks"""
     conn = psycopg.connect(DATABASE_URL)
-    with conn.cursor() as cur:
-        cur.execute(SCHEMA)
+    present = set(conn.execute(
+        "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = current_schema()"
+    ).fetchall())
+    if COLUMNS - present:
+        conn.execute(SCHEMA)
     conn.commit()
     return conn

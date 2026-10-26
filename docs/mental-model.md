@@ -104,6 +104,12 @@ uv run python -m gate.cli --repo owner/name --issue 476     # one issue, end to 
 uv run python -m gate.cli --repo owner/name --symptom "…"   # no issue number: describe what the user saw
 ```
 
+For a batch, `--sweep --top 10` refreshes issues and PRs, ranks open issues, and investigates the selected issues one by one. `--sweep --issues 424,431` lets you name the issues directly. A sweep tracks its progress in the `sweeps` table and rewrites the board as each issue finishes.
+
+Claude Code reaches the same workflow through `gate.mcp_server`, a local stdio MCP server. `start_sweep` launches the CLI in the background, `sweep_status` reports progress, `stop_sweep` asks it to stop between issues, and `get_board` returns the current results and local page paths. A confidence label only describes checks that ran: cause citations, added PR lines, merge status, and whether the PR is a draft; the PR itself is never executed. "Top 3" means three issues that have not been looked at yet: issues already done are skipped and do not count. Under each issue's best PR, the board also lists the other PRs that fix or partly fix it, because once one of them is merged the rest are probably duplicates that someone needs to close.
+
+A sweep that crashes cannot block the next one. The MCP server checks whether the process behind a "running" sweep is still alive, and a process that has died reads as dead even if nobody has collected its exit yet, so the old row is marked as an error and a new sweep starts. Opening a database connection takes no locks once the tables are complete: `connect()` first looks up which tables and columns exist and only changes the schema when one is missing, so the MCP server never waits for a sweep that is holding the database open while Claude works on an issue.
+
 The first run on a repo clones it into `vendor/` and collects it. `--refresh` collects again. `--model opus` uses a stronger, about 5× more expensive model.
 
 ## 7. Numbers worth remembering

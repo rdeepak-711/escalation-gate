@@ -5,23 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ label }} · escalation packet · {{ repo }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,500;1,500&display=swap">
 <style>
   :root {
-    --bg:#fafafa; --card:#fff; --ink:#171717; --text:#262626; --soft:#525252; --muted:#737373;
-    --line:#e5e5e5; --code-bg:#f5f5f5;
+    --bg:#dde3e8; --card:#e9eef2; --ink:#3b1f36; --text:#3b1f36; --soft:#5e4a5a; --muted:#5e4a5a;
+    --line:#bfc8d0; --code-bg:#d3dae0;
     --green:#065f46; --green-bg:#ecfdf5; --green-line:#a7f3d0;
     --amber:#92400e; --amber-bg:#fffbeb; --amber-line:#fde68a;
     --red:#9f1239; --red-bg:#fff1f2; --red-line:#fecdd3; --red-edge:#e11d48;
-    --sans:"Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
-    --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:"Geist", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing:border-box; }
   html { scroll-behavior:smooth; }
   body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 var(--sans); }
   a { color:inherit; }
   /* navigation: one sticky bar across the top */
-  nav { position:sticky; top:0; z-index:10; background:rgba(255,255,255,.96); border-bottom:1px solid var(--line);
+  nav { position:sticky; top:0; z-index:10; background:rgba(233,238,242,.96); border-bottom:1px solid var(--line);
         backdrop-filter:blur(6px); }
   nav .bar { max-width:1200px; margin:0 auto; padding:10px 32px; display:flex; align-items:center; gap:24px; }
   nav .who { display:flex; gap:10px; align-items:baseline; flex-shrink:0; }
@@ -30,8 +30,8 @@
   nav ul { list-style:none; margin:0 0 0 auto; padding:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
   nav li { flex-shrink:0; }
   nav a { display:block; padding:5px 10px; border-radius:6px; text-decoration:none; color:var(--soft); font-size:14px; }
-  nav a:hover { background:#f5f5f5; color:var(--ink); }
-  nav a.active { background:#f0f0f0; color:var(--ink); font-weight:500; }
+  nav a:hover { background:#d3dae0; color:var(--ink); }
+  nav a.active { background:#d3dae0; color:var(--ink); font-weight:500; }
 
   main { padding:32px 32px 80px; }
   .page { max-width:1200px; margin:0 auto; }
@@ -54,7 +54,7 @@
   .pill.green { background:var(--green-bg); color:var(--green); border-color:var(--green-line); }
   .pill.amber { background:var(--amber-bg); color:var(--amber); border-color:var(--amber-line); }
   .pill.red { background:var(--red-bg); color:var(--red); border-color:var(--red-line); }
-  .pill.grey { background:#f5f5f5; color:var(--soft); border-color:var(--line); }
+  .pill.grey { background:#d3dae0; color:var(--soft); border-color:var(--line); }
 
   details summary { cursor:pointer; color:var(--ink); font-size:14px; text-decoration:underline; text-underline-offset:3px; margin-top:10px; list-style:none; }
   details summary::-webkit-details-marker { display:none; }
@@ -70,7 +70,7 @@
   .why { font-size:14px; color:var(--text); margin:0; }
   .card.failed { border-left:3px solid var(--red-edge); }
 
-  .note { background:#f5f5f5; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:14px; margin-top:4px; }
+  .note { background:#d3dae0; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:14px; margin-top:4px; }
   .pr.recommended { border:2px solid var(--ink); }
   .pr .title { font-weight:500; color:var(--ink); }
   .pr .title a { text-decoration:none; }
@@ -102,7 +102,7 @@
   .flow .box:not(:last-child):not(:nth-child(3n))::after { content:"→"; position:absolute; right:-23px; top:50%;
        transform:translateY(-50%); color:var(--muted); font-size:16px; }
   .flow .step { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
-       background:var(--ink); color:#fff; font-size:12px; font-weight:600; flex-shrink:0; }
+       background:var(--ink); color:#e9eef2; font-size:12px; font-weight:600; flex-shrink:0; }
   .flow .box .head { display:flex; gap:8px; align-items:center; min-width:0; }
 
   .cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
@@ -118,7 +118,7 @@
   .file .cite:first-of-type { border-top:0; }
   .file .cite.failed { border-left:3px solid var(--red-edge); }
   .file .cite .quote { margin:8px 0 6px; }
-  .count { font-size:12px; color:var(--soft); background:#f0f0f0; border-radius:999px; padding:1px 8px; white-space:nowrap; flex-shrink:0; }
+  .count { font-size:12px; color:var(--soft); background:#d3dae0; border-radius:999px; padding:1px 8px; white-space:nowrap; flex-shrink:0; }
 
   .funnel { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:12px 0 16px; }
   .funnel .stage { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:14px; position:relative; }
@@ -167,6 +167,7 @@
     .board > div { border-left:0 !important; }
     .board > .h.col, .board > .corner { display:none; }
   }
+  h1, h2 { font-family:"Playfair Display", Georgia, serif; font-weight:500; letter-spacing:-.01em; }
 </style>
 </head>
 <body>
@@ -203,6 +204,11 @@
             <span class="pill green">Merges clean · git check</span>
           </div>
         </div>
+      </div>
+      {% elif draft_fixes %}
+      <div class="card verdict none">
+        <h3>Not ready to merge: {{ draft_fixes|map(attribute="pr")|list|joined }} {{ "is a draft PR" if draft_fixes|length == 1 else "are draft PRs" }}</h3>
+        <p class="sub">Judged to fix the cause from the diff, but marked as a draft by its author.</p>
       </div>
       {% else %}
       <div class="card verdict none">
@@ -286,7 +292,7 @@
         <div class="stage"><b>{{ judged|length }}</b>change the cause</div>
         <div class="stage end{{ '' if recommended else ' none' }}"><b>{{ board.fixes.clean|length }}</b>fix{{ 'es' if board.fixes.clean|length == 1 else '' }} and merge{{ 's' if board.fixes.clean|length == 1 else '' }} clean</div>
       </div>
-      {% if competing|length > 1 %}<div class="note">{{ competing|joined }} all change the cause. Once one is merged, the others duplicate it.</div>{% endif %}
+      {% if overlap %}<div class="note">{{ overlap }}</div>{% endif %}
       {% if judged %}
       <div class="board" style="margin-top:12px">
         <div class="h corner"></div><div class="h col">Merges clean</div><div class="h col">Conflicts or unknown</div>
@@ -299,6 +305,7 @@
             <div class="pills" style="justify-content:flex-start;margin-bottom:4px">
               {% if recommended and v.pr == recommended.pr %}<span class="pill green">recommended</span>{% endif %}
               <span class="pill {{ 'green' if v.verdict == 'fixes' else 'amber' }}">{{ v.verdict|capitalize }}</span>
+              {% if v.draft %}<span class="pill grey">Draft</span>{% endif %}
               <span class="pill {{ {'clean': 'green', 'conflicts': 'red'}.get(v.merge, 'grey') }}">{{ merge_label[v.merge]|capitalize }}</span>
             </div>
             <a href="#pr-{{ v.pr }}">#{{ v.pr }} · {{ v.title }}</a> <span class="by">by {{ v.author }}</span>
@@ -320,6 +327,13 @@
           </div>
         </div>
         <p class="why">{{ v.why }}</p>
+        <div class="fix-lines">
+          <strong>Lines that fix it</strong>
+          {% if v.fix_lines %}
+            <ul>{% for line in v.fix_lines %}<li><code>{{ line.file }}:{{ line.line }}</code> · <code>{{ line.quote }}</code> {{ "✅" if line.checked else "❌" }}</li>{% endfor %}</ul>
+          {% else %}<p>no fix lines given</p>{% endif %}
+          {% if v.confidence %}<p>{{ v.confidence.text }}</p>{% endif %}
+        </div>
         <div class="because">Shortlisted because: {{ v.reasons|join(", ") }}</div>
       </div>
       {% endfor %}
