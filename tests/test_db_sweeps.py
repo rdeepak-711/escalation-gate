@@ -254,6 +254,7 @@ def test_a_sweep_process_that_dies_is_marked_error_and_does_not_block_the_next(d
         spawned.append(proc)  # keep it referenced, as the server does not wait on it
         return proc
     monkeypatch.setattr(ms.subprocess, "Popen", dies_at_once)
+    monkeypatch.setattr(ms, "preflight", lambda: None)
     monkeypatch.setattr(ms, "OUT_DIR", tmp_path / "out")
     monkeypatch.setattr(ms, "SITE_DIR", tmp_path / "site")
 

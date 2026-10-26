@@ -1,15 +1,17 @@
 """stdio MCP tools for starting and inspecting escalation-gate repo sweeps."""
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+import psycopg
 from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from gate import board
-from gate.db import connect
+from gate.db import DATABASE_URL, connect
 from gate.investigate import ROOT
 
 SITE_DIR = ROOT / "site"
@@ -29,6 +31,24 @@ REPO = re.compile(r"^[A-Za-z0-9-]+/(?!\.\.?$)[A-Za-z0-9_.-]+$")
 def validate_repo(repo: str) -> None:
     if not isinstance(repo, str) or not REPO.fullmatch(repo):
         raise ToolError("repo must be an owner/name GitHub repository")
+
+
+def preflight() -> None:
+    """Checks the tools a sweep needs; each failure is one sentence the agent can act on."""
+    if shutil.which("gh") is None:
+        raise ToolError("the GitHub CLI (gh) is not installed: install it from https://cli.github.com/")
+    if subprocess.run(["gh", "auth", "status"], capture_output=True).returncode != 0:
+        raise ToolError("the GitHub CLI is not logged in: run gh auth login")
+    if shutil.which("claude") is None:
+        raise ToolError("Claude Code (claude) is not on PATH: install it and log in before sweeping")
+
+
+def open_db():
+    """connect(), with an unreachable Postgres reported as one sentence."""
+    try:
+        return connect()
+    except psycopg.OperationalError:
+        raise ToolError(f"Postgres is not reachable at {DATABASE_URL}: start it and run createdb escalation_gate")
 
 
 def latest_sweep(conn, repo: str):
@@ -98,7 +118,8 @@ def start_sweep(repo: str, top: int = 10, issues: list[int] | None = None, model
         raise ToolError("issues must contain at most 50 positive issue numbers")
     if model not in ("sonnet", "opus", "haiku"):
         raise ToolError("model must be sonnet, opus, or haiku")
-    conn = connect()
+    preflight()
+    conn = open_db()
     try:
         latest = latest_sweep(conn, repo)
         if latest and latest["status"] in ("running", "stopping"):
@@ -123,7 +144,7 @@ def start_sweep(repo: str, top: int = 10, issues: list[int] | None = None, model
 @server.tool()
 def sweep_status(repo: str) -> dict:
     validate_repo(repo)
-    conn = connect()
+    conn = open_db()
     try:
         latest = latest_sweep(conn, repo)
         if not latest:
@@ -145,7 +166,7 @@ def sweep_status(repo: str) -> dict:
 @server.tool()
 def get_board(repo: str) -> dict:
     validate_repo(repo)
-    conn = connect()
+    conn = open_db()
     try:
         rows = board_rows(conn, repo)
         base = SITE_DIR / repo.split("/")[1]
@@ -162,7 +183,7 @@ def get_board(repo: str) -> dict:
 @server.tool()
 def stop_sweep(repo: str) -> dict:
     validate_repo(repo)
-    conn = connect()
+    conn = open_db()
     try:
         latest = latest_sweep(conn, repo)
         if not latest or latest["status"] not in ("running", "stopping"):

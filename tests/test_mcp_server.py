@@ -39,6 +39,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(ms, "request_stop", lambda conn, sid: state["stops"].append(sid))
     monkeypatch.setattr(ms, "board_rows", lambda conn, repo: state["rows"])
     monkeypatch.setattr(ms.subprocess, "Popen", FakePopen)
+    monkeypatch.setattr(ms, "preflight", lambda: None)  # gh/claude checks have their own tests
     return state, tmp_path
 
 
