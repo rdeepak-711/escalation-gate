@@ -94,6 +94,40 @@ It has four tools:
 - `get_board(repo)` returns every investigated issue with the PR to merge, the other PRs that also fix it (likely duplicates once one is merged), and a confidence level built only from checks that ran: the cause lines were found in the code, the PR's fixing lines are really in its diff, and the PR merges cleanly. Whether those lines fix the bug is still the model's judgement from reading the diff; nothing runs the PR.
 - `stop_sweep(repo)` stops after the current issue.
 
+### What a sweep looks like
+
+A real run on 25 Oct 2026 against `interviewstreet/hiring-agent` (HackerRank's LLM résumé scorer), top 3 open issues, from a Claude Code session with this server registered. Trimmed; the numbers are as returned.
+
+```text
+> Using escalation-gate, sweep the top 3 issues of interviewstreet/hiring-agent.
+  Tell me which PR solves which issue, which to merge first, and how confident you are.
+
+  start_sweep → {"sweep_id": 2, "status": "running", "board": ".../site/hiring-agent/index.html"}
+
+  The sweep is running in the background on 3 issues; each takes a few minutes.
+
+  sweep_status → {"status": "running", "done": 1, "total": 2, "current": 427,
+                  "finished": [{"issue": 373, "outcome": "verified", "result": "merge #451"}]}
+
+  ... about 5 minutes later ...
+
+  get_board → 2 issues investigated this run
+
+  #373  Anthropic settings in providers.json don't work with real Claude models
+        merge #451 · high: cause lines checked · fix lines checked · merges clean
+        also fixes #377 (conflicts) · partly #421
+
+  #427  overall score is capped by the LLM-returned max instead of role.json
+        merge #438 · high: cause lines checked · fix lines checked · merges clean
+        also fixes #487 (merges clean) · partly #443
+
+  Merge order: #451 first (clean, touches evaluator.py, models.py, pdf.py, providers.json),
+  then #438 (score.py, transform.py; no shared files). Once #438 is in, #487 is a duplicate.
+  "high" means every check that ran passed. Nothing ran the code; that is v2.
+```
+
+The third issue it picked, #273, had already been investigated, so the run did two. (Since then "top 3" means three not yet done.)
+
 Everything runs on your machine: your Postgres, your `gh` login, and your Claude Code login, so a sweep costs what the issues cost on your own plan (about $0.03–0.45 each on Sonnet). Each issue takes a few minutes. The board is written to `site/<name>/index.html`.
 
 ## Limits
